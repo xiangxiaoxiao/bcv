@@ -1,0 +1,6 @@
+*.~
+*.swp
+obj/*
+bin/*
+lib/*.so
+
