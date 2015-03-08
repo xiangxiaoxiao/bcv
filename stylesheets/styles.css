@@ -3,17 +3,22 @@
 body {
   padding:50px;
   font:14px/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color:#777;
+  background: url(../website-images/billie_holiday.png) repeat 0 0;
+  color:#222;
   font-weight:300;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  color:#222;
-  margin:0 0 20px;
+  color:#111;
+  margin:10px 0 10px;
 }
 
+/*
 p, ul, ol, table, pre, dl {
   margin:0 0 20px;
+}*/
+p {
+  margin: 0px;
 }
 
 h1, h2, h3 {
@@ -33,16 +38,11 @@ h3, h4, h5, h6 {
 }
 
 a {
-  color:#39c;
-  font-weight:400;
-  text-decoration:none;
+  color: rgb(50,100,230);
+  text-decoration: none;
 }
-
-a small {
-  font-size:11px;
-  color:#777;
-  margin-top:-0.6em;
-  display:block;
+a:hover {
+  color: rgb(50,130,200);
 }
 
 .wrapper {
@@ -60,15 +60,16 @@ blockquote {
 code, pre {
   font-family:Monaco, Bitstream Vera Sans Mono, Lucida Console, Terminal;
   color:#333;
-  font-size:12px;
+  font-size:13px;
 }
 
 pre {
-  padding:8px 15px;
-  background: #f8f8f8;  
+  padding:5px 15px;
+  background: url(../website-images/billie_holiday2.png) repeat 0 0; 
   border-radius:5px;
   border:1px solid #e5e5e5;
   overflow-x: auto;
+  margin: 0 0 0 0;
 }
 
 table {
@@ -252,4 +253,10 @@ footer {
     font-size:12pt;
     color:#444;
   }
+}
+
+figcaption { 
+  color: rgb(50,50,50);
+  font-style: italic;
+  margin-bottom: 5px;
 }
