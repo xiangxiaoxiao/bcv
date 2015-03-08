@@ -1,9 +1,9 @@
 # bcv - basic computer vision
 
-# dependencies:
-libjpeg, libpng
+### dependencies:
+[gflags](https://code.google.com/p/gflags/), libjpeg, libpng
 
-# contact:
+### contact:
 
 vasiliy // karasev00@gmail.com
 
