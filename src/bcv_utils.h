@@ -11,6 +11,13 @@
 
 using namespace std;
 
+#ifndef BCV_UCHAR_TYPEDEF_
+#define BCV_UCHAR_TYPEDEF_
+typedef unsigned char uchar;
+#endif
+
+#define BCV_SIGN(x) (((x)>0) - ((x)<0))
+
 // image element access operations
 int inline linear_index(int r, int c, int k, int cols, int chan) {
     return k + (c + r*cols)*chan;

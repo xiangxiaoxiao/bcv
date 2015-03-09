@@ -27,8 +27,9 @@ LIBS += -L/usr/local/lib -lm -L/usr/lib/x86_64-linux-gnu/ -ljpeg -lpng -lgflags 
 LIBBCV = -L$(LIB)/ -lbcv
 #------------------------------------------------------------------------------
 CXXFLAGS = -O3 -fPIC -Wall -pedantic 
-BCVLIB_OBJS = rw_jpeg.o rw_png.o bcv_io.o bcv_utils.o Slic.o
-TESTS = test_io test_slic
+BCVLIB_OBJS = rw_jpeg.o rw_png.o bcv_io.o bcv_diff_ops.o bcv_utils.o \
+bcv_kmeans.o Slic.o tvsegment.o
+TESTS = test_io test_slic test_tvsegment
 
 VPATH = $(SRC):$(EXAMPLES)
 TEST_OBJS = $(addsuffix .o, $(TESTS) )
