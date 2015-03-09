@@ -1,4 +1,4 @@
-## test_slic
+## SLIC superpixels (test_slic)
 
 This example uses SLIC to produce a segmentation, and writes a few results. Here is a sample call:
 

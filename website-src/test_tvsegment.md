@@ -1,26 +1,32 @@
-## test_tvsegment
+## TV-regularized segmentation (test_tvsegment)
 
 This example is about (multi-label) image segmentation, specifically about a convex relaxation of the Potts model. The problem to find a set of regions `R_1`, ..., `R_K` which form a partition of the image domain. This can be formulated as:
 
-<img class="eqn" src="website-images/tvsegment0.png" alt="tvsegment eqn"/>
+$$
+\min_{R_1,\dots,R_K} \lambda \sum_{l=1}^K Per(R_l ; \Omega) + \sum_{l=1}^K \int_{R_l} f_l dx \text{ s.t. } R_i \cap R_j = \varnothing \forall i\neq j, \text{ and } \cup_{l=1}^K R_l = \Omega
+$$
 
 The first term penalizes the boundary length. The second term is some prior on region assignments.
 
 A common convex relaxation of this problem is:
 
-<img class="eqn" src="website-images/tvsegment1.png" alt="tvsegment eqn"/>
+$$
+\min_{u_1,\dots,u_K}\lambda \sum_{l=1}^K \int_{\Omega} |WDu_l| + \sum_{l=1}^K \int_{\Omega} u_l f_l dx \text{ s.t. } u_l(x)\geq 0 \text{ and }\sum_{l=1}^K u_l(x) = 1 \forall x \in \Omega
+$$
 
 where `u_1`,...,`u_K` are indicators of a particular region, which can be recovered as `R_i = {x: u_i(x) = 1}`. The first term is the weighted TV regularization (relaxation of boundary perimeters). The probability simplex constraint is the relaxation of the requirement that only one region must be "active" at a pixel.
 
-__Unary term__: In the examples below, the unary term is the Euclidean distance between the image intensity at a pixel and a prototype image intensity `c_l` (obtained by kmeans)
-
-<img class="eqn" src="website-images/tvsegment3.png" alt="tvsegment unary"/>
+__Unary term__: In the examples below, the unary term is the Euclidean distance between the image intensity at a pixel and a prototype image intensity `c_l` (obtained by kmeans) 
+$
+f_l(x) = \| I(x)-c_l \|^2
+$
 
 In practice one should use something more sophisticated, e.g. using local statistics.
 
-__TV weighing__: The edges are weighed by image similarity as follows:
-
-<img class="eqn" src="website-images/tvsegment2.png" alt="tvsegment weights"/>
+__TV weighing__: The edges are weighed by image similarity as:
+$
+W(x,z) = \exp(-\frac{1}{2 \beta} \| I(x)-I(z)\|^2 )
+$
 
 This is customary. The parameter `beta` can be used to control weights' range. Also, as customary `beta` is pre-multiplied by the average intensity difference estimated over the entire image.
 

@@ -11,63 +11,85 @@
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+
+	<!-- mathjax scripts start here -->	
+	<script type="text/javascript"
+	  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+	</script>
+	<script type="text/x-mathjax-config">
+	  	MathJax.Hub.Config({
+		  jax: ["input/TeX","output/HTML-CSS"],
+		  extensions: ["tex2jax.js","MathMenu.js","MathZoom.js"],
+		  TeX: {
+		    extensions: ["AMSmath.js","AMSsymbols.js","noErrors.js","noUndefined.js"]
+		  }
+		});
+	</script>
+	<script type="text/x-mathjax-config">
+	  	MathJax.Hub.Config({
+  		  "HTML-CSS": {
+    	  preferredFont: "TeX",
+    	  availableFonts: ["TeX"]
+  		  }
+		});
+	</script>
+	<script type="text/x-mathjax-config">
+	  MathJax.Hub.Config({tex2jax: {
+	  	inlineMath: [['$','$'], ['\\(','\\)']]}});
+	</script>
+
+
   </head>
   <body>
     <div class="wrapper">
       <header>
-        <h1><a href="http://vasiliykarasev.github.io/bcv/">bcv</a></h1>
-        <p>basic computer vision</p>
-
-        <p class="view"><a href="https://github.com/vasiliykarasev/bcv">view the project on github</a></p>
-
-
-        <ul>
-          <li><a href="https://github.com/vasiliykarasev/bcv/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/vasiliykarasev/bcv/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/vasiliykarasev/bcv">View On <strong>GitHub</strong></a></li>
-        </ul>
+        <h1><a href="http://vasiliykarasev.github.io/bcv/">bcv: basic computer vision</a></h1>
+        <hr class="dashed">
       </header>
       <section>
-<h2>test_slic</h2>
-
+<h2>SLIC superpixels (test_slic)</h2>
 <p>This example uses SLIC to produce a segmentation, and writes a few results. Here is a sample call:</p>
-
 <pre><code>./test_slic -input=../images/kings.jpg -K=3000 -M=5 -num_iters=5 -max_levels=2
 </code></pre>
-
 <p>and the output:</p>
-
 <pre><code>Took 286.743000 ms to superpixellize
 Writing visualization of segmentation to out.png
 Writing averaged image to out_avg.png
 </code></pre>
-
 <p>This generates a segmentation with 3000 superpixels, a geometric weight of 5, in 5 iterations. It performs optimization at two levels, and downsamples each level by a factor of 2.</p>
-
-<p><figure>
+<figure>
 <a href="website-images/slic_example.jpg"><img src="website-images/slic_example.jpg" alt="slic example"/></a>
 <figcaption>
 Left: input image. Middle: superpixel boundaries. Right: visualization using the mean color for each region. 
 </figcaption>
-</figure></p>
+</figure>
 
 <h3>Notes</h3>
-
 <ul>
-<li><p>SLIC is essentially k-means on LAB+xy components. Optimization in LAB space is preferred, but doing integer kmeans in RGB space is faster (saves a few hundred milliseconds). This is what we do here. The implementation assumes the input image is RGB and its components are of type <code>uint8</code>.</p></li>
-<li><p>To produce a reasonable segmentation, one needs at least 5 iterations; ~10 is preferrable. For large images, this is somewhat expensive (~40 ms per iteration for a 640x480 image). These iterations are needed to reliably estimate the center of a superpixel in RGB-xy space. This quantity can be estimated much faster using a downsampled image (since downsampling, when done correctly, is essentially averaging). To leverage on this, our implementation performs a multi-scale SLIC segmentation on an image pyramid. This is done <em>only</em> to improve speed; results are actually a bit worse. </p></li>
+<li>
+<p>SLIC is essentially k-means on LAB+xy components. Optimization in LAB space is preferred, but doing integer kmeans in RGB space is faster (saves a few hundred milliseconds). This is what we do here. The implementation assumes the input image is RGB and its components are of type <code>uint8</code>.</p>
+</li>
+<li>
+<p>To produce a reasonable segmentation, one needs at least 5 iterations; ~10 is preferrable. For large images, this is somewhat expensive (~40 ms per iteration for a 640x480 image). These iterations are needed to reliably estimate the center of a superpixel in RGB-xy space. This quantity can be estimated much faster using a downsampled image (since downsampling, when done correctly, is essentially averaging). To leverage on this, our implementation performs a multi-scale SLIC segmentation on an image pyramid. This is done <em>only</em> to improve speed; results are actually a bit worse. </p>
+</li>
 </ul>
-
 <h3>References</h3>
-
 <ul>
-<li><p>Radhakrishna Achanta, Appu Shaji, Kevin Smith, Aurelien Lucchi, Pascal Fua, and Sabine Susstrunk, "SLIC Superpixels Compared to State-of-the-art Superpixel Methods", IEEE Transactions on Pattern Analysis and Machine Intelligence, 2012.</p></li>
-<li><p>Radhakrishna Achanta, Appu Shaji, Kevin Smith, Aurelien Lucchi, Pascal Fua, and Sabine Susstrunk, "SLIC Superpixels", EPFL Technical Report, 2010.</p></li>
-</ul>
-      </section>
+<li>
+<p>Radhakrishna Achanta, Appu Shaji, Kevin Smith, Aurelien Lucchi, Pascal Fua, and Sabine Susstrunk, "SLIC Superpixels Compared to State-of-the-art Superpixel Methods", IEEE Transactions on Pattern Analysis and Machine Intelligence, 2012.</p>
+</li>
+<li>
+<p>Radhakrishna Achanta, Appu Shaji, Kevin Smith, Aurelien Lucchi, Pascal Fua, and Sabine Susstrunk, "SLIC Superpixels", EPFL Technical Report, 2010.</p>
+</li>
+</ul>      </section>
       <footer>
-        <p>This project is maintained by <a href="https://github.com/vasiliykarasev">vasiliykarasev</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+        <hr class="dashed">
+<a href="mailto:karasev00@gmail.com"><img src="website-images/emaillogo.png" class="logoimage" alt="email"/></a>
+<a href="https://github.com/vasiliykarasev"><img src="website-images/githublogo.png" class="logoimage" alt="github"/></a>
+
+
+website rebuilt on 
+Mon Mar  9 00:32:26 PDT 2015
       </footer>
     </div>
     <script src="javascripts/scale.fix.js"></script>

@@ -47,22 +47,29 @@
         <hr class="dashed">
       </header>
       <section>
-<h3>What this is</h3>
-<p>bcv is a small library of algorithms that i (personally) find interesting. </p>
-<h3>What it does?</h3>
-<ul>
-<li><a href="test_slic.html">SLIC superpixels</a></li>
-<li><a href="test_tvsegment.html">TV-regularized segmentation</a></li>
-</ul>
-<h3>Download</h3>
-<ul>
-<li><a href="https://github.com/vasiliykarasev/bcv/zipball/master">ZIP</a></li>
-<li><a href="https://github.com/vasiliykarasev/bcv/tarball/master">TAR</a></li>
-<li><a href="https://github.com/vasiliykarasev/bcv">View on <em>GitHub</em></a></li>
-<li><a href="installation.html">Installation tips</a></li>
-</ul>
-<h3>Contact</h3>
-<p><a href="mailto:karasev00@gmail.com">email me</a></p>      </section>
+<h3>Installation</h3>
+<p>The project is built with a single makefile, and there are rather few dependencies.
+To allow reading/writing images, make sure you have <code>libjpeg</code> and <code>libpng</code> installed.
+Also install <a href="gflags">gflags</a>, as all examples heavily rely on it.</p>
+<p>You can build the library and the examples simply with:</p>
+<pre><code>$ make all
+</code></pre>
+<p>You may wish to symlink the library to <code>/usr/local/lib</code>, in which case you should
+probably run</p>
+<pre><code>$ sudo make install  
+$ sudo ld config
+</code></pre>
+<p>Alternatively you can modify your <code>LD_LIBRARY_PATH</code> to include the lib directory.
+To do so, open your <code>.bashrc</code> file with your favorite text editor:</p>
+<pre><code>$ vim ~/.bashrc
+</code></pre>
+<p>Add a line:</p>
+<pre><code>export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/bcv/lib/
+</code></pre>
+<p>And reload it:</p>
+<pre><code>$ source ~/.bashrc
+</code></pre>
+<p>At this point you can navigate to <code>bin/</code> and try the examples.</p>      </section>
       <footer>
         <hr class="dashed">
 <a href="mailto:karasev00@gmail.com"><img src="website-images/emaillogo.png" class="logoimage" alt="email"/></a>

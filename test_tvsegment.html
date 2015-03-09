@@ -11,60 +11,69 @@
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+
+	<!-- mathjax scripts start here -->	
+	<script type="text/javascript"
+	  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+	</script>
+	<script type="text/x-mathjax-config">
+	  	MathJax.Hub.Config({
+		  jax: ["input/TeX","output/HTML-CSS"],
+		  extensions: ["tex2jax.js","MathMenu.js","MathZoom.js"],
+		  TeX: {
+		    extensions: ["AMSmath.js","AMSsymbols.js","noErrors.js","noUndefined.js"]
+		  }
+		});
+	</script>
+	<script type="text/x-mathjax-config">
+	  	MathJax.Hub.Config({
+  		  "HTML-CSS": {
+    	  preferredFont: "TeX",
+    	  availableFonts: ["TeX"]
+  		  }
+		});
+	</script>
+	<script type="text/x-mathjax-config">
+	  MathJax.Hub.Config({tex2jax: {
+	  	inlineMath: [['$','$'], ['\\(','\\)']]}});
+	</script>
+
+
   </head>
   <body>
     <div class="wrapper">
       <header>
-        <h1><a href="http://vasiliykarasev.github.io/bcv/">bcv</a></h1>
-        <p>basic computer vision</p>
-
-        <p class="view"><a href="https://github.com/vasiliykarasev/bcv">view the project on github</a></p>
-
-
-        <ul>
-          <li><a href="https://github.com/vasiliykarasev/bcv/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/vasiliykarasev/bcv/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/vasiliykarasev/bcv">View On <strong>GitHub</strong></a></li>
-        </ul>
+        <h1><a href="http://vasiliykarasev.github.io/bcv/">bcv: basic computer vision</a></h1>
+        <hr class="dashed">
       </header>
       <section>
-<h2>test_tvsegment</h2>
-
+<h2>TV-regularized segmentation (test_tvsegment)</h2>
 <p>This example is about (multi-label) image segmentation, specifically about a convex relaxation of the Potts model. The problem to find a set of regions <code>R_1</code>, ..., <code>R_K</code> which form a partition of the image domain. This can be formulated as:</p>
-
-<p><img class="eqn" src="website-images/tvsegment0.png" alt="tvsegment eqn"/></p>
-
+<p><mathjax>$$
+\min_{R_1,\dots,R_K} \lambda \sum_{l=1}^K Per(R_l ; \Omega) + \sum_{l=1}^K \int_{R_l} f_l dx \text{ s.t. } R_i \cap R_j = \varnothing \forall i\neq j, \text{ and } \cup_{l=1}^K R_l = \Omega
+$$</mathjax></p>
 <p>The first term penalizes the boundary length. The second term is some prior on region assignments.</p>
-
 <p>A common convex relaxation of this problem is:</p>
-
-<p><img class="eqn" src="website-images/tvsegment1.png" alt="tvsegment eqn"/></p>
-
+<p><mathjax>$$
+\min_{u_1,\dots,u_K}\lambda \sum_{l=1}^K \int_{\Omega} |WDu_l| + \sum_{l=1}^K \int_{\Omega} u_l f_l dx \text{ s.t. } u_l(x)\geq 0 \text{ and }\sum_{l=1}^K u_l(x) = 1 \forall x \in \Omega
+$$</mathjax></p>
 <p>where <code>u_1</code>,...,<code>u_K</code> are indicators of a particular region, which can be recovered as <code>R_i = {x: u_i(x) = 1}</code>. The first term is the weighted TV regularization (relaxation of boundary perimeters). The probability simplex constraint is the relaxation of the requirement that only one region must be "active" at a pixel.</p>
-
-<p><strong>Unary term</strong>: In the examples below, the unary term is the Euclidean distance between the image intensity at a pixel and a prototype image intensity <code>c_l</code> (obtained by kmeans)</p>
-
-<p><img class="eqn" src="website-images/tvsegment3.png" alt="tvsegment unary"/></p>
-
+<p><strong>Unary term</strong>: In the examples below, the unary term is the Euclidean distance between the image intensity at a pixel and a prototype image intensity <code>c_l</code> (obtained by kmeans) 
+<mathjax>$
+f_l(x) = \| I(x)-c_l \|^2
+$</mathjax></p>
 <p>In practice one should use something more sophisticated, e.g. using local statistics.</p>
-
-<p><strong>TV weighing</strong>: The edges are weighed by image similarity as follows:</p>
-
-<p><img class="eqn" src="website-images/tvsegment2.png" alt="tvsegment weights"/></p>
-
+<p><strong>TV weighing</strong>: The edges are weighed by image similarity as:
+<mathjax>$
+W(x,z) = \exp(-\frac{1}{2 \beta} \| I(x)-I(z)\|^2 )
+$</mathjax></p>
 <p>This is customary. The parameter <code>beta</code> can be used to control weights' range. Also, as customary <code>beta</code> is pre-multiplied by the average intensity difference estimated over the entire image.</p>
-
 <p><strong>Optimization</strong>: The problem is solved using first-order primal-dual algorithm (see references). It is highly parallelizable, but the current implementation does not attempt to do that.</p>
-
 <h3>Examples</h3>
-
 <p>A sample call:</p>
-
 <pre><code>./test_tvsegment --input=../images/valley.jpg --output=out.png -beta=20 -lambda=.1 -num_clusters=5
 </code></pre>
-
 <p>Output:</p>
-
 <pre><code>kmeans: n pts: 307200, dim: 3, K: 5
 learned cluster centers:
 K = 0: 0.920650 0.967045 0.994683 
@@ -81,7 +90,6 @@ image size: 480x640x3
 TV segmentation took: 5325.771973 ms
 Wrote the result to 'out.png'
 </code></pre>
-
 <p>Below are results for segmentation with varying number of clusters, and varying TV regularization penalty.
 <figure>
 <a href="website-images/tvsegment_variedK.jpg">
@@ -89,31 +97,37 @@ Wrote the result to 'out.png'
 </a>
 <figcaption>Segmentation with varying number of clusters. Left: input image. Right: segmentation with <code>K = 5, 10, 20</code></figcaption>
 </figure></p>
-
-<p><figure>
+<figure>
 <a href="website-images/tvsegment_variedlambda.jpg">
 <img src="website-images/tvsegment_variedlambda.jpg" alt="tv segmentation, varied TV regularization"/>
 </a>
-<figcaption>Segmentation with 3 clusters and varying TV regularization.. Left: input image. Right: segmentation with <code>lambda = 0.01, 0.1, 0.5</code>. Note that as <code>lambda -&gt; 0</code>, segmentation becomes essentially k-means clustering on the image intensities.</figcaption>
-</figure></p>
+<figcaption>Segmentation with 3 clusters and varying TV regularization.. Left: input image. Right: segmentation with `lambda = 0.01, 0.1, 0.5`. Note that as `lambda -> 0`, segmentation becomes essentially k-means clustering on the image intensities.</figcaption>
+</figure>
 
-<p><figure>
+<figure>
 <a href="website-images/tvsegment_ex3.jpg">
 <img src="website-images/tvsegment_ex3.jpg" alt="tv segmentation"/>
 </a>
-<figcaption>Top: original image. Bottom: segmentation with <code>K=5</code></figcaption>
-</figure></p>
+<figcaption>Top: original image. Bottom: segmentation with `K=5`</figcaption>
+</figure>
 
 <h3>References</h3>
-
 <ul>
-<li><p>Antonin Chambolle, Thomas Pock, "A first-order primal-dual algorithm for convex problems with applications to imaging", Journal of Mathematical Imaging and Vision, 2011.</p></li>
-<li><p>Thomas Pock, Antonin Chambolle, Daniel Cremers, Horst Bischof, "A convex relaxation approach for computing minimal partitions", CVPR 2009.</p></li>
-</ul>
-      </section>
+<li>
+<p>Antonin Chambolle, Thomas Pock, "A first-order primal-dual algorithm for convex problems with applications to imaging", Journal of Mathematical Imaging and Vision, 2011.</p>
+</li>
+<li>
+<p>Thomas Pock, Antonin Chambolle, Daniel Cremers, Horst Bischof, "A convex relaxation approach for computing minimal partitions", CVPR 2009.</p>
+</li>
+</ul>      </section>
       <footer>
-        <p>This project is maintained by <a href="https://github.com/vasiliykarasev">vasiliykarasev</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+        <hr class="dashed">
+<a href="mailto:karasev00@gmail.com"><img src="website-images/emaillogo.png" class="logoimage" alt="email"/></a>
+<a href="https://github.com/vasiliykarasev"><img src="website-images/githublogo.png" class="logoimage" alt="github"/></a>
+
+
+website rebuilt on 
+Mon Mar  9 00:32:26 PDT 2015
       </footer>
     </div>
     <script src="javascripts/scale.fix.js"></script>
