@@ -30,24 +30,24 @@ __Optimization__: The problem is solved using first-order primal-dual algorithm 
 
 A sample call:
 
-    ./test_tvsegment --input images/valley.jpg --output out.png --max-iters 100 --beta 20 --lambda .1 --num-clusters 5 --isotropic 1
+    ./test_tvsegment --input=../images/valley.jpg --output=out.png -beta=20 -lambda=.1 -num_clusters=5
 
 Output:
 
     kmeans: n pts: 307200, dim: 3, K: 5
     learned cluster centers:
-    K = 0: 0.994683 0.967045 0.920650 
-    K = 1: 0.184025 0.233376 0.295402 
-    K = 2: 0.847665 0.576018 0.339771 
-    K = 3: 0.941981 0.763595 0.604728 
-    K = 4: 0.335889 0.397112 0.460750 
+    K = 0: 0.920650 0.967045 0.994683 
+    K = 1: 0.295402 0.233376 0.184025 
+    K = 2: 0.339771 0.576018 0.847665 
+    K = 3: 0.604728 0.763595 0.941981 
+    K = 4: 0.460750 0.397112 0.335889 
     lambda: 0.100000
     beta: 20.000000
     num-clusters: 5
     isotropic: 1
     max-iters: 100
     image size: 480x640x3
-    TV segmentation took: 7117.339111 ms
+    TV segmentation took: 5325.771973 ms
     Wrote the result to 'out.png'
 
 Below are results for segmentation with varying number of clusters, and varying TV regularization penalty.
