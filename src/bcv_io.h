@@ -22,8 +22,12 @@ typedef unsigned char uchar;
 //! Writes 'jpg' or 'png' image.
 template <class T> void bcv_imwrite(const char* fname, 
                 const vector<T>& x, int rows, int cols, int chan) {
-    vector<unsigned char> img;
-    img.assign(x.begin(), x.end());
+    vector<uchar> img = vector<uchar>(x.size());
+    for (int i = 0; i < x.size(); ++i) {
+        T val = min( max( (T)0, x[i] ), (T)255 );
+        img[i] = (uchar)val;
+    }
+
     if (isJPG(fname)) {
         int quality = 100;
         write_jpeg_file(fname, &img[0], cols, rows, chan, quality);

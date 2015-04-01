@@ -21,6 +21,7 @@ BIN=./bin
 CXX = g++ 
 LF = -shared
 EX = .so
+MKDIR_P = mkdir -p
 #------------------------------------------------------------------------------
 INCLUDE_DIR += -I$(SRC)/ -I/usr/local/include/
 LIBS += -L/usr/local/lib -lm -L/usr/lib/x86_64-linux-gnu/ -ljpeg -lpng -lgflags -lpthread
@@ -28,13 +29,25 @@ LIBBCV = -L$(LIB)/ -lbcv
 #------------------------------------------------------------------------------
 CXXFLAGS = -O3 -fPIC -Wall -pedantic 
 BCVLIB_OBJS = rw_jpeg.o rw_png.o bcv_io.o bcv_diff_ops.o bcv_utils.o \
-bcv_kmeans.o Slic.o tvsegment.o
-TESTS = test_io test_slic test_tvsegment
+bcv_kmeans.o Slic.o tvsegment.o bcv_imgproc.o
+TESTS = test_io test_slic test_tvsegment test_imgproc
 
 VPATH = $(SRC):$(EXAMPLES)
 TEST_OBJS = $(addsuffix .o, $(TESTS) )
 
-all: libbcv $(TESTS)
+
+.PHONY: directories
+
+all: directories libbcv $(TESTS)
+
+directories: $(BIN) $(OBJ) $(LIB)
+
+$(BIN):
+	$(MKDIR_P) $(BIN)
+$(OBJ):
+	$(MKDIR_P) $(OBJ)
+$(LIB):
+	$(MKDIR_P) $(LIB)
 
 tests: $(TESTS)
 

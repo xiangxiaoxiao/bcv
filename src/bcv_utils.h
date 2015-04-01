@@ -31,6 +31,13 @@ int inline getrow(int i, int cols) {
 int inline getcol(int i, int cols) {
     return i - (i / cols)*cols;
 }
+int inline getrow(int i, int cols, int chan) { 
+    return (i / chan) / cols;
+}
+int inline getcol(int i, int cols, int chan) { 
+    return (i / chan) - (i / chan / cols)*cols;
+}
+
 //
 vector<int> choose_random_subset(int k, int n);
 
