@@ -23,14 +23,18 @@ LF = -shared
 EX = .so
 MKDIR_P = mkdir -p
 #------------------------------------------------------------------------------
-INCLUDE_DIR += -I$(SRC)/ -I/usr/local/include/
+INCLUDE_DIR += -I. -I$(SRC)/ -I/usr/local/include/
 LIBS += -L/usr/local/lib -lm -L/usr/lib/x86_64-linux-gnu/ -ljpeg -lpng -lgflags -lpthread
 LIBBCV = -L$(LIB)/ -lbcv
+
+FFMPEG_LIBS=    -lavdevice -lavformat -lavfilter \
+				-lavcodec -lswresample -lswscale -lavutil
 #------------------------------------------------------------------------------
 CXXFLAGS = -O3 -fPIC -Wall -pedantic 
+CXXFLAGS += -march=native -mtune=native -msse3 -DHAVE_SSE
 BCVLIB_OBJS = rw_jpeg.o rw_png.o bcv_io.o bcv_diff_ops.o bcv_utils.o \
-bcv_kmeans.o Slic.o tvsegment.o bcv_imgproc.o
-TESTS = test_io test_slic test_tvsegment test_imgproc
+bcv_kmeans.o Slic.o tvsegment.o tvdn.o bcv_imgproc.o
+TESTS = test_io test_slic test_tvsegment test_tvdn test_imgproc
 
 VPATH = $(SRC):$(EXAMPLES)
 TEST_OBJS = $(addsuffix .o, $(TESTS) )
@@ -51,10 +55,14 @@ $(LIB):
 
 tests: $(TESTS)
 
+#test_ffmpeg: test_ffmpeg.o
+#	$(CXX) $(CXXFLAGS) $(INCLUDE_DIR) $(OBJ)/$@.o $(LIBS) $(LIBBCV) $(FFMPEG_LIBS) -o $(BIN)/$@ 
+#	$(call colorecho, "CREATED "$(BIN)/$@" SUCCESSFULLY!", 2)
+
 libbcv: $(BCVLIB_OBJS)
 	$(CXX) $(LF) $(CXXFLAGS) $(INCLUDE_DIR) \
-	$(addprefix $(OBJ)/, $(BCVLIB_OBJS) ) $(LIBS) -o $(LIB)/libbcv$(EX) 
-	$(call colorecho, "BUILT LIBRARY! CREATED lib/libbcv.so SUCCESSFULLY!", 2)
+	$(addprefix $(OBJ)/, $(BCVLIB_OBJS) ) $(LIBS) -o $(LIB)/$@$(EX) 
+	$(call colorecho, "BUILT LIBRARY! CREATED lib/$@$(EX) SUCCESSFULLY!", 2)
 
 %.o: $(SRC)/%.cpp $(SRC)/*.h
 	$(CXX) $(CXXFLAGS) $(INCLUDE_DIR) -c $< -o $(OBJ)/$@ $(LIBS)
@@ -66,7 +74,7 @@ libbcv: $(BCVLIB_OBJS)
 # ------------------------------------------------------------------------------
 # 								BUILD EXAMPLES
 # ------------------------------------------------------------------------------
-$(TESTS): $(TEST_OBJS)
+$(TESTS): $(TEST_OBJS) libbcv
 	$(CXX) $(CXXFLAGS) $(INCLUDE_DIR) $(OBJ)/$@.o $(LIBS) $(LIBBCV) -o $(BIN)/$@ 
 	$(call colorecho, "CREATED "$(BIN)/$@" SUCCESSFULLY!", 2)
 #------------------------------------------------------------------------------
@@ -75,6 +83,6 @@ clean:
 	rm -f $(LIB)/libbcv$(EX)
 
 install:
-	ln -s $(CURDIR)/$(LIB)/libbcv.so /usr/local/lib/libbcv.so 
-	$(call colorecho, "INSTALLED /usr/local/lib/libbcv.so !", 2)
+	ln -s $(CURDIR)/$(LIB)/libbcv$(EX) /usr/local/lib/libbcv$(EX) 
+	$(call colorecho, "INSTALLED /usr/local/lib/libbcv$(EX) !", 2)
 	$(call colorecho, "you may wish to run 'sudo ldconfig' now", 1)

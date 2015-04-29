@@ -11,6 +11,8 @@
 
 using namespace std;
 
+//! returns a grayscale image
+vector<float> rgb2gray(const vector<float>& x);
 
 void rgb2yiq(vector<float>& x);
 void yiq2rgb(vector<float>& x);

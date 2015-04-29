@@ -26,6 +26,11 @@
 #include <vector>
 #include "bcv_utils.h"
 
+#ifdef HAVE_SSE
+#include <xmmintrin.h>
+#include <pmmintrin.h>
+#endif
+
 using namespace std;
 
 //! Applies pixelwise gradient operator:
@@ -37,6 +42,7 @@ void apply_pixelwise_gradient_op(vector<float>& out, const vector<float>& in, in
 void apply_pixelwise_gradient_op_transpose(vector<float>& out, const vector<float>& in, int rows, int cols, int chan); 
 void apply_pixelwise_gradient_op_transpose(vector<float>& out, const vector<float>& in, int rows, int cols); 
 
+#if !defined(HAVE_MATLAB) & !defined(HAVE_SSE)
 void apply_dx(float* out, const float* in, int rows, int cols, int chan);
 void apply_dxt(float* out, const float* in, int rows, int cols, int chan);
 void apply_dy(float* out, const float* in, int rows, int cols, int chan);
@@ -48,6 +54,7 @@ void apply_dxt(float* out, const float* in, int rows, int cols);
 void apply_dy(float* out, const float* in, int rows, int cols);
 //! result is 'ADDED' to the 'out' vector (not 'REPLACED')  
 void apply_dyt(float* out, const float* in, int rows, int cols);
+#endif
 
 #if defined(HAVE_SSE) && !defined(HAVE_MATLAB)
 void apply_dx_sse(float* out, const float* in, int rows, int cols);
@@ -55,6 +62,13 @@ void apply_dxt_sse(float* out, const float* in, int rows, int cols);
 void apply_dy_sse(float* out, const float* in, int rows, int cols);
 //! result is 'ADDED' to the 'out' vector (not 'REPLACED')    
 void apply_dyt_sse(float* out, const float* in, int rows, int cols);
+
+void apply_dx_sse(float* out, const float* in, int rows, int cols, int chan);
+void apply_dxt_sse(float* out, const float* in, int rows, int cols, int chan);
+void apply_dy_sse(float* out, const float* in, int rows, int cols, int chan);
+//! result is 'ADDED' to the 'out' vector (not 'REPLACED')    
+void apply_dyt_sse(float* out, const float* in, int rows, int cols, int chan);
+
 #endif
 
 // because of MATLAB-esque memory layout, it is not necessary to have

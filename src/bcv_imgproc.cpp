@@ -141,3 +141,10 @@ void tint(vector<float>&x, const vector<float>& rgb, float percent) {
     }
     transform(x.begin(), x.end(), x.begin(), bind1st(multiplies<float>(), maxval));
 }
+
+vector<float> rgb2gray(const vector<float>& x) {
+    int n = x.size()/3;
+    vector<float> z = vector<float>(n);
+    for (int i = 0; i < n; ++i) { z[i] = (x[3*i]+x[3*i+1]+x[3*i+2])/3.0f; }
+    return z;
+}

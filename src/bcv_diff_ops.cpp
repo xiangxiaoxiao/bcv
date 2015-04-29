@@ -1,7 +1,9 @@
 //! @file bcv_diff_ops.cpp
 #include "bcv_diff_ops.h"
 
+
 void apply_pixelwise_gradient_op(vector<float>& out, const vector<float>& in, int rows, int cols, int chan) { 
+    if (chan==1) { apply_pixelwise_gradient_op(out, in, rows, cols); return; }
     size_t m = in.size();
     if (out.size() != 2*m) { out = vector<float>(2*m); }
     #if defined(HAVE_MATLAB) & !defined(HAVE_SSE)
@@ -10,14 +12,17 @@ void apply_pixelwise_gradient_op(vector<float>& out, const vector<float>& in, in
     #elif defined(HAVE_MATLAB) & defined(HAVE_SSE)
     apply_dx_matlab_sse( &out[0], &in[0], rows, cols, chan);
     apply_dy_matlab_sse( &out[m], &in[0], rows, cols, chan);
+    #elif !defined(HAVE_MATLAB) & defined(HAVE_SSE)
+    apply_dx_sse( &out[0], &in[0], rows, cols, chan);
+    apply_dy_sse( &out[m], &in[0], rows, cols, chan);    
     #else
-    // TODO: implement SSE versions..
     apply_dx( &out[0], &in[0], rows, cols, chan);
     apply_dy( &out[m], &in[0], rows, cols, chan);    
     #endif
 }
 
 void apply_pixelwise_gradient_op_transpose(vector<float>& out, const vector<float>& in, int rows, int cols, int chan) { 
+    if (chan==1) { apply_pixelwise_gradient_op_transpose(out, in, rows, cols); return; }
     size_t m = in.size();
     if (out.size() != m/2) { out = vector<float>(m/2); }
     // order of application matters!!
@@ -27,8 +32,10 @@ void apply_pixelwise_gradient_op_transpose(vector<float>& out, const vector<floa
     #elif defined(HAVE_MATLAB) & defined(HAVE_SSE)
     apply_dxt_matlab_sse( &out[0], &in[0], rows, cols, chan);
     apply_dyt_matlab_sse( &out[0], &in[m/2], rows, cols, chan);            
+    #elif !defined(HAVE_MATLAB) & defined(HAVE_SSE)
+    apply_dxt_sse( &out[0], &in[0], rows, cols, chan);
+    apply_dyt_sse( &out[0], &in[m/2], rows, cols, chan);     
     #else
-    // TODO: implement SSE version..    
     apply_dxt( &out[0], &in[0], rows, cols, chan);
     apply_dyt( &out[0], &in[m/2], rows, cols, chan);            
     #endif
@@ -43,7 +50,7 @@ void apply_pixelwise_gradient_op(vector<float>& out, const vector<float>& in, in
     #elif defined(HAVE_MATLAB) & defined(HAVE_SSE)
     apply_dx_matlab_sse( &out[0], &in[0], rows, cols);
     apply_dy_matlab_sse( &out[m], &in[0], rows, cols);
-    #elif defined(HAVE_SSE)
+    #elif !defined(HAVE_MATLAB) & defined(HAVE_SSE)
     apply_dx_sse( &out[0], &in[0], rows, cols);
     apply_dy_sse( &out[m], &in[0], rows, cols);    
     #else
@@ -62,7 +69,7 @@ void apply_pixelwise_gradient_op_transpose(vector<float>& out, const vector<floa
     #elif defined(HAVE_MATLAB) & defined(HAVE_SSE)
     apply_dxt_matlab_sse( &out[0], &in[0], rows, cols);
     apply_dyt_matlab_sse( &out[0], &in[m/2], rows, cols);            
-    #elif defined(HAVE_SSE)   
+    #elif !defined(HAVE_MATLAB) & defined(HAVE_SSE)   
     apply_dxt_sse( &out[0], &in[0], rows, cols);
     apply_dyt_sse( &out[0], &in[m/2], rows, cols);            
     #else
@@ -71,26 +78,23 @@ void apply_pixelwise_gradient_op_transpose(vector<float>& out, const vector<floa
     #endif
 }
 
+#if !defined(HAVE_MATLAB) && !defined(HAVE_SSE)
 void apply_dy(float* out, const float* in, int rows, int cols, int chan) { 
     for (int r = 0; r < rows-1; ++r) { 
         int rn = r+1;
-        for (int c = 0; c < cols; ++c) { 
-            for (int k = 0; k < chan; ++k) { 
-                int i1 = linear_index(r, c, k, cols, chan);
-                int i2 = linear_index(rn, c, k, cols, chan);
-                out[i1] = in[i2] - in[i1];
-            }
+        for (int c = 0; c < cols*chan; ++c) {
+            int i1 = r*cols*chan + c;
+            int i2 = rn*cols*chan + c;
+            out[i1] = in[i2] - in[i1];
         }
     }
     //
     int r = rows-1;
     int rn = 0;
-    for (int c = 0; c < cols; ++c) {
-        for (int k = 0; k < chan; ++k) { 
-            int i1 = linear_index(r, c, k, cols, chan);
-            int i2 = linear_index(rn, c, k, cols, chan);
-            out[i1] = in[i2] - in[i1];
-        }
+    for (int c = 0; c < cols*chan; ++c) {
+        int i1 = r*cols*chan + c;
+        int i2 = rn*cols*chan + c;
+        out[i1] = in[i2] - in[i1];
     }
 }
 
@@ -115,27 +119,23 @@ void apply_dy(float* out, const float* in, int rows, int cols) {
 void apply_dyt(float* out, const float* in, int rows, int cols, int chan) { 
     for (int r = 1; r < rows; ++r) { 
         int rp = r-1;
-        for (int c = 0; c < cols; ++c) { 
-            for (int k = 0; k < chan; ++k) { 
-                int i1 = linear_index(r, c, k, cols, chan);
-                int i2 = linear_index(rp, c, k, cols, chan);
-                //! NOTICE THAT THIS IS '+=', rather than '='.
-                //! YOU MUST RUN apply_dxt prior to running this function
-                out[i1] += (in[i2] - in[i1]);
-            }
+        for (int c = 0; c < cols*chan; ++c) { 
+            int i1 = r*cols*chan + c;
+            int i2 = rp*cols*chan + c;
+            //! NOTICE THAT THIS IS '+=', rather than '='.
+            //! YOU MUST RUN apply_dxt prior to running this function
+            out[i1] += (in[i2] - in[i1]);
         }
     }
     //
     int r = 0;
     int rp = rows-1;
-    for (int c = 0; c < cols; ++c) { 
-        for (int k = 0; k < chan; ++k) { 
-            int i1 = linear_index(r, c, k, cols, chan);
-            int i2 = linear_index(rp, c, k, cols, chan);
-            //! NOTICE THAT THIS IS '+=', rather than '='.
-            //! YOU MUST RUN apply_dxt prior to running this function
-            out[i1] += (in[i2] - in[i1]);
-        }
+    for (int c = 0; c < cols*chan; ++c) { 
+        int i1 = r*cols*chan + c;
+        int i2 = rp*cols*chan + c;
+        //! NOTICE THAT THIS IS '+=', rather than '='.
+        //! YOU MUST RUN apply_dxt prior to running this function
+        out[i1] += (in[i2] - in[i1]);
     }
 }
 
@@ -163,20 +163,15 @@ void apply_dyt(float* out, const float* in, int rows, int cols) {
 
 void apply_dx(float* out, const float* in, int rows, int cols, int chan) { 
     for (int r = 0; r < rows; ++r) {
-        for (int c = 0; c < cols-1; ++c) {
-            int cn = c + 1;
-            for (int k = 0; k < chan; ++k) {
-                int i1 = linear_index(r, c, k, cols, chan);
-                int i2 = linear_index(r, cn, k, cols, chan);
-                out[i1] = in[i2] - in[i1];
-            }
+        for (int c = 0; c < (cols-1)*chan; ++c) {
+            int i1 = r*cols*chan + c;
+            int i2 = r*cols*chan + c + chan;
+            out[i1] = in[i2] - in[i1];
         }
         //
-        int c = cols-1;
-        int cn = 0;
         for (int k = 0; k < chan; ++k) { 
-            int i1 = linear_index(r, c, k, cols, chan);
-            int i2 = linear_index(r, cn, k, cols, chan);
+            int i1 = r*cols*chan + (cols-1)*chan + k;
+            int i2 = r*cols*chan + k;
             out[i1] = in[i2] - in[i1];
         }
     }
@@ -200,20 +195,15 @@ void apply_dx(float* out, const float* in, int rows, int cols) {
 
 void apply_dxt(float* out, const float* in, int rows, int cols, int chan) {
     for (int r = 0; r < rows; ++r) { 
-        int c = 0;
-        int cp = cols-1;
-        for (int k = 0; k < chan; ++k) { 
-            int i1 = linear_index(r, c, k, cols, chan);
-            int i2 = linear_index(r, cp, k, cols, chan);
-            out[i1] = (in[i2] - in[i1]);
+        for (int k = 0; k < chan; ++k) {
+            int i1 = r*cols*chan + k;
+            int i2 = r*cols*chan + (cols-1)*chan + k;
+            out[i1] = in[i2] - in[i1];
         }
-        for (int c = 1; c < cols; ++c) {
-            cp = c - 1;
-            for (int k = 0; k < chan; ++k) { 
-                int i1 = linear_index(r, c, k, cols, chan);
-                int i2 = linear_index(r, cp, k, cols, chan);
-                out[i1] = (in[i2] - in[i1]);
-            }
+        for (int c = chan; c < chan*cols; ++c) { 
+            int i1 = r*cols*chan + c;
+            int i2 = r*cols*chan + c - chan;
+            out[i1] = in[i2] - in[i1];            
         }
     }
 }
@@ -233,9 +223,43 @@ void apply_dxt(float* out, const float* in, int rows, int cols) {
         }
     }
 }
+#endif 
 
 // ----------------------------------------------------------------------------
-#ifdef HAVE_SSE
+#if !defined(HAVE_MATLAB) && defined(HAVE_SSE)
+
+void apply_dy_sse(float* out, const float* in, int rows, int cols, int chan) { 
+    __m128 m_out, m_in1, m_in2;
+    int nloops_c = cols*chan/4;
+    for (int r = 0; r < rows-1; ++r) { 
+        int rn = r+1;
+        for (int c = 0; c < nloops_c; ++c) {
+            m_in1 = _mm_loadu_ps( in + (r*cols*chan+4*c) );
+            m_in2 = _mm_loadu_ps( in + (rn*cols*chan+4*c) );
+            m_out = _mm_sub_ps(m_in2, m_in1);
+            _mm_storeu_ps( out + (r*cols*chan+4*c), m_out );
+        }
+        for (int c = nloops_c*4; c < cols*chan; ++c) {
+            int i1 = r*cols*chan + c;
+            int i2 = rn*cols*chan + c;
+            out[i1] = in[i2] - in[i1];
+        }
+    }
+    int r = rows-1;
+    int rn = 0;
+    for (int c = 0; c < nloops_c; ++c) {
+        m_in1 = _mm_loadu_ps( in + (r*cols*chan+4*c) );
+        m_in2 = _mm_loadu_ps( in + (rn*cols*chan+4*c) );
+        m_out = _mm_sub_ps(m_in2, m_in1);
+        _mm_storeu_ps( out + (r*cols*chan+4*c), m_out );
+    }
+    for (int c = nloops_c*4; c < cols*chan; ++c) {    
+        int i1 = r*cols*chan + c;
+        int i2 = rn*cols*chan + c;
+        out[i1] = in[i2] - in[i1];
+    }
+}
+
 void apply_dy_sse(float* out, const float* in, int rows, int cols) { 
     __m128 m_out, m_in1, m_in2;
     int nloops_c = cols/4;
@@ -253,6 +277,45 @@ void apply_dy_sse(float* out, const float* in, int rows, int cols) {
             int i2 = rn*cols + c;
             out[i1] = in[i2] - in[i1];
         }
+    }
+}
+
+void apply_dyt_sse(float* out, const float* in, int rows, int cols, int chan) { 
+    __m128 m_out, m_in1, m_in2;
+    int nloops_c = cols*chan/4;    
+    for (int r = 1; r < rows; ++r) { 
+        int rp = r-1;
+        for (int c = 0; c < nloops_c; ++c) {
+            m_in1 = _mm_loadu_ps( in  + (r*cols*chan+4*c) );
+            m_in2 = _mm_loadu_ps( in  + (rp*cols*chan+4*c) );
+            m_out = _mm_loadu_ps( out + (r*cols*chan+4*c) );
+            m_out = _mm_add_ps(m_out, _mm_sub_ps(m_in2, m_in1));
+            _mm_storeu_ps( out + (r*cols*chan+4*c), m_out );            
+        }
+        for (int c = nloops_c*4; c < cols*chan; ++c) { 
+            int i1 = r*cols*chan + c;
+            int i2 = rp*cols*chan + c;
+            //! NOTICE THAT THIS IS '+=', rather than '='.
+            //! YOU MUST RUN apply_dxt prior to running this function
+            out[i1] += (in[i2] - in[i1]);
+        }
+    }
+    //
+    int r = 0;
+    int rp = rows-1;
+    for (int c = 0; c < nloops_c; ++c) {
+        m_in1 = _mm_loadu_ps( in  + (r*cols*chan+4*c) );
+        m_in2 = _mm_loadu_ps( in  + (rp*cols*chan+4*c) );
+        m_out = _mm_loadu_ps( out + (r*cols*chan+4*c) );
+        m_out = _mm_add_ps(m_out, _mm_sub_ps(m_in2, m_in1));
+        _mm_storeu_ps( out + (r*cols*chan+4*c), m_out );            
+    }
+    for (int c = nloops_c*4; c < cols*chan; ++c) { 
+        int i1 = r*cols*chan + c;
+        int i2 = rp*cols*chan + c;
+        //! NOTICE THAT THIS IS '+=', rather than '='.
+        //! YOU MUST RUN apply_dxt prior to running this function
+        out[i1] += (in[i2] - in[i1]);
     }
 }
 
@@ -281,6 +344,29 @@ void apply_dyt_sse(float* out, const float* in, int rows, int cols) {
     }
 }
 
+void apply_dx_sse(float* out, const float* in, int rows, int cols, int chan) { 
+    __m128 m_in1, m_in2;
+    int nloops_c = (cols-1)*chan/4;        
+    for (int r = 0; r < rows; ++r) {
+        for (int c = 0; c < nloops_c; ++c) {
+            m_in1 = _mm_loadu_ps( in + r*cols*chan+4*c );
+            m_in2 = _mm_loadu_ps( in + r*cols*chan+4*c + chan );
+            _mm_storeu_ps( out + r*cols*chan+4*c, _mm_sub_ps(m_in2, m_in1) );
+        }
+        for (int c = nloops_c*4; c < (cols-1)*chan; ++c) {
+            int i1 = r*cols*chan + c;
+            int i2 = r*cols*chan + c + chan;
+            out[i1] = in[i2] - in[i1];
+        }
+        //
+        for (int k = 0; k < chan; ++k) { 
+            int i1 = r*cols*chan + (cols-1)*chan + k;
+            int i2 = r*cols*chan + k;
+            out[i1] = in[i2] - in[i1];
+        }
+    }
+}
+
 void apply_dx_sse(float* out, const float* in, int rows, int cols) { 
     __m128 m_out, m_in1, m_in2;
     int nloops_c = (cols-1)/4;
@@ -302,6 +388,29 @@ void apply_dx_sse(float* out, const float* in, int rows, int cols) {
         int i1 = r*cols + c;
         int i2 = r*cols + cn;
         out[i1] = in[i2] - in[i1];
+    }
+}
+
+void apply_dxt_sse(float* out, const float* in, int rows, int cols, int chan) {
+    __m128 m_in1, m_in2;
+    int nloops_c = (cols-1)*chan/4;  
+
+    for (int r = 0; r < rows; ++r) { 
+        for (int k = 0; k < chan; ++k) {
+            int i1 = r*cols*chan + k;
+            int i2 = r*cols*chan + (cols-1)*chan + k;
+            out[i1] = in[i2] - in[i1];
+        }
+        for (int c = 0; c < nloops_c; ++c) { 
+            m_in1 = _mm_loadu_ps( in + (r*cols*chan+chan+4*c) );
+            m_in2 = _mm_loadu_ps( in + (r*cols*chan+4*c) );
+            _mm_storeu_ps( out + (r*cols*chan+4*c+chan), _mm_sub_ps(m_in2, m_in1) );
+        }
+        for (int c = nloops_c*4; c < chan*(cols-1); ++c) { 
+            int i1 = r*cols*chan + c + chan;
+            int i2 = r*cols*chan + c;
+            out[i1] = in[i2] - in[i1];            
+        }
     }
 }
 
