@@ -47,29 +47,11 @@
         <hr class="dashed">
       </header>
       <section>
-<h3>Installation</h3>
-<p>The project is built with a single makefile, and there are rather few dependencies.
-To allow reading/writing images, make sure you have <code>libjpeg</code> and <code>libpng</code> installed.
-Also install <a href="gflags">gflags</a>, as all examples heavily rely on it.</p>
-<p>You can build the library and the examples simply with:</p>
-<pre><code>$ make all
-</code></pre>
-<p>You may wish to symlink the library to <code>/usr/local/lib</code>, in which case you should
-probably run</p>
-<pre><code>$ sudo make install  
-$ sudo ld config
-</code></pre>
-<p>Alternatively you can modify your <code>LD_LIBRARY_PATH</code> to include the lib directory.
-To do so, open your <code>.bashrc</code> file with your favorite text editor:</p>
-<pre><code>$ vim ~/.bashrc
-</code></pre>
-<p>Add a line:</p>
-<pre><code>export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/bcv/lib/
-</code></pre>
-<p>And reload it:</p>
-<pre><code>$ source ~/.bashrc
-</code></pre>
-<p>At this point you can navigate to <code>bin/</code> and try the examples.</p>      </section>
+<h2>Changelog</h2>
+<h3>2015-4-28</h3>
+<ul>
+<li>added <code>test_tvdn</code> and associated solver (TV denoising)</li>
+</ul>      </section>
       <footer>
         <hr class="dashed">
 <a href="mailto:karasev00@gmail.com"><img src="website-images/emaillogo.png" class="logoimage" alt="email"/></a>

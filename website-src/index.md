@@ -6,6 +6,7 @@ bcv is a small library of algorithms that i (personally) find interesting.
 
 * [SLIC superpixels](test_slic.html)
 * [TV-regularized segmentation](test_tvsegment.html)
+* [TV denoising](test_tvdn.html)
 
 ### Download
 
@@ -13,7 +14,7 @@ bcv is a small library of algorithms that i (personally) find interesting.
 * [TAR](https://github.com/vasiliykarasev/bcv/tarball/master)
 * [View on *GitHub*](https://github.com/vasiliykarasev/bcv)
 * [Installation tips](installation.html)
-
+* [Changelog](changelog.html)
 ### Contact
 
 [email me](mailto:karasev00@gmail.com)
