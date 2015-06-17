@@ -11,6 +11,9 @@
 
 using namespace std;
 
+//! resize image (isotropically)
+vector<float> imresize(const vector<float>& in, int in_rows, int in_cols, int out_rows, int out_cols);
+
 //! returns a grayscale image
 vector<float> rgb2gray(const vector<float>& x);
 

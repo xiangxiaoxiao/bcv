@@ -21,7 +21,7 @@ typedef unsigned char uchar;
 
 //! Writes 'jpg' or 'png' image.
 template <class T> void bcv_imwrite(const char* fname, 
-                const vector<T>& x, int rows, int cols, int chan) {
+                const vector<T>& x, int rows, int cols, int chan=1) {
     vector<uchar> img = vector<uchar>(x.size());
     for (int i = 0; i < x.size(); ++i) {
         T val = min( max( (T)0, x[i] ), (T)255 );
@@ -59,12 +59,32 @@ template <class T> vector<T> bcv_imread(const char* fname, int* rows, int* cols,
         printf("cannot read image.\n");
         return vector<T>();
     }
-    int n = (*rows)*(*cols)*(*chan);    
+    int n = (*rows)*(*cols)*(*chan);
     vector<T> x;
     x.assign(img, img+n);
     if (img!=NULL) { free(img); }
     return x;
 }
+
+//! Loads image from 'fname' and converts to grayscale if needed
+template <class T> vector<T> bcv_imread(const char* fname, int* rows, int* cols) { 
+    unsigned char* img=NULL;
+    int channels;
+    vector<T> x = bcv_imread<T>(fname, rows, cols, &channels);
+    if (channels==1) { return x; }
+    // convert image to grayscale    
+    int n = (*rows)*(*cols);
+    vector<T> y = vector<T>(n);
+    for (int i = 0; i < n; ++i) { 
+        double u = 0.0f;
+        for (int k = 0; k < channels; ++k) { 
+            u += x[i*(channels)+k];
+        }
+        y[i] = u/=(channels);
+    }
+    return y;
+}
+
 
 //! Returns 1 if file exists, 0 otherwise.
 inline int file_exists(const char* fname) {

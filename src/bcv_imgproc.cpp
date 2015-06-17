@@ -1,5 +1,34 @@
 #include "bcv_imgproc.h"
 
+vector<float> imresize(const vector<float>& in, int in_rows, int in_cols, int out_rows, int out_cols) {
+    if ((in_rows == out_rows) && (in_cols == out_cols)) { return in; }
+    float scale_y = ((float)out_rows) / ((float)in_rows );
+    float scale_x = ((float)out_cols) / ((float)in_cols );
+    int chan = in.size()/(in_rows*in_cols);
+    vector<float> out = vector<float>(out_rows*out_cols*chan);
+    for (int r = 0; r < out_rows; ++r) {
+        for (int c = 0; c < out_cols; ++c) {
+            float r_og = r/scale_y;
+            float c_og = c/scale_x;
+            int r0 = min(max(0, (int)floor(r_og)), in_rows-1);
+            int r1 = min(max(0, (int)ceil(r_og)), in_rows-1);
+            int c0 = min(max(0, (int)floor(c_og)), in_cols-1);
+            int c1 = min(max(0, (int)ceil(c_og)), in_cols-1);
+            float dy = abs(r_og-r0);
+            float dx = abs(c_og-c0);
+            for (int ch = 0; ch < chan; ++ch) {
+                out[linear_index(r, c, ch, out_cols, chan)] = 
+                         (1-dy)*(1-dx)*in[ linear_index(r0, c0, ch, in_cols, chan) ] + 
+                         (1-dy)*(  dx)*in[ linear_index(r0, c1, ch, in_cols, chan) ] + 
+                         (  dy)*(1-dx)*in[ linear_index(r1, c0, ch, in_cols, chan) ] + 
+                         (  dy)*(  dx)*in[ linear_index(r1, c1, ch, in_cols, chan) ]; 
+            }
+        }
+    }
+    return out;
+}
+
+
 void rgb2hsv(vector<float>& x) {
     assert( (x.size() % 3) == 0 && "image has 3 channels." );
     for (int i = 0; i < x.size(); i+=3) { rgb2hsv_one(&x[i]); }

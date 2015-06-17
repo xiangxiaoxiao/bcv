@@ -23,26 +23,28 @@ LF = -shared
 EX = .so
 MKDIR_P = mkdir -p
 #------------------------------------------------------------------------------
-INCLUDE_DIR += -I. -I$(SRC)/ -I/usr/local/include/
-LIBS += -L/usr/local/lib -lm -L/usr/lib/x86_64-linux-gnu/ -ljpeg -lpng -lgflags -lpthread
+INCLUDE_DIR += -I. -I$(SRC)/ -I/usr/local/include/ -I/usr/include
+LIBS += -L/usr/local/lib -lm -L/usr/lib/x86_64-linux-gnu/
+LIBS += -ljpeg -lpng -lgflags -lfftw3f -lpthread
 LIBBCV = -L$(LIB)/ -lbcv
 
 FFMPEG_LIBS=    -lavdevice -lavformat -lavfilter \
 				-lavcodec -lswresample -lswscale -lavutil
 #------------------------------------------------------------------------------
-CXXFLAGS = -O3 -fPIC -Wall -pedantic 
+CXXFLAGS = -g -fPIC -Wall -pedantic 
 CXXFLAGS += -march=native -mtune=native -msse3 -DHAVE_SSE
 BCVLIB_OBJS = rw_jpeg.o rw_png.o bcv_io.o bcv_diff_ops.o bcv_utils.o \
-bcv_kmeans.o Slic.o tvsegment.o tvdn.o bcv_imgproc.o
-TESTS = test_io test_slic test_tvsegment test_tvdn test_imgproc
+bcv_kmeans.o Slic.o tvsegment.o tvdn.o tvdeblur.o bcv_imgproc.o
+TESTS = test_slic test_tvsegment test_tvdn test_imgproc test_tvdeblur
+SANITY_TESTS = test_io test_fftw
 
 VPATH = $(SRC):$(EXAMPLES)
 TEST_OBJS = $(addsuffix .o, $(TESTS) )
-
+SANITY_TEST_OBJS = $(addsuffix .o, $(SANITY_TESTS) )
 
 .PHONY: directories
 
-all: directories libbcv $(TESTS)
+all: directories libbcv sanity_tests tests
 
 directories: $(BIN) $(OBJ) $(LIB)
 
@@ -54,6 +56,8 @@ $(LIB):
 	$(MKDIR_P) $(LIB)
 
 tests: $(TESTS)
+
+sanity_tests: $(SANITY_TESTS)
 
 #test_ffmpeg: test_ffmpeg.o
 #	$(CXX) $(CXXFLAGS) $(INCLUDE_DIR) $(OBJ)/$@.o $(LIBS) $(LIBBCV) $(FFMPEG_LIBS) -o $(BIN)/$@ 
@@ -77,6 +81,11 @@ libbcv: $(BCVLIB_OBJS)
 $(TESTS): $(TEST_OBJS) libbcv
 	$(CXX) $(CXXFLAGS) $(INCLUDE_DIR) $(OBJ)/$@.o $(LIBS) $(LIBBCV) -o $(BIN)/$@ 
 	$(call colorecho, "CREATED "$(BIN)/$@" SUCCESSFULLY!", 2)
+
+$(SANITY_TESTS): $(SANITY_TEST_OBJS) libbcv
+	$(CXX) $(CXXFLAGS) $(INCLUDE_DIR) $(OBJ)/$@.o $(LIBS) $(LIBBCV) -o $(BIN)/$@ 
+	$(call colorecho, "CREATED "$(BIN)/$@" SUCCESSFULLY!", 2)
+
 #------------------------------------------------------------------------------
 clean:
 	rm -f $(OBJ)/*.o

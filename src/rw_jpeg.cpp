@@ -22,7 +22,6 @@ void write_jpeg_file(const char * filename, unsigned char* img, int width, int h
     cinfo.image_height = height;
     cinfo.input_components = channels;  /* # of color components per pixel */
 
-    cout << "chennels: " << channels << endl;
     if (channels == 3)
         cinfo.in_color_space = JCS_RGB;  /* colorspace of input image */
     else
