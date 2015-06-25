@@ -2,22 +2,7 @@
 #include "bcv_kmeans.h"
 namespace bcv {
 
-bcv_kmeans::bcv_kmeans() { 
-    num_pts = 0;
-    dim = 0;
-    K = 0;
-    num_iterations = 0;
-    verbosity = 0;
-    dfx_tolerance = 1e-5;
-    kmeans_init_method = KMEANS_INIT_RANDOM;
-    kmeans_method = KMEANS_LLOYD;
-
-    data = NULL;
-    distance = NULL;
-    assignments = NULL;
-    centers = NULL;
-    count = NULL;
-}
+bcv_kmeans::bcv_kmeans() {}
 
 bcv_kmeans::bcv_kmeans(const bcv_kmeans& that) {
     num_pts = that.num_pts;
@@ -155,9 +140,9 @@ bcv_kmeans::bcv_kmeans(const vector<float>& d,
             return;
         }
         // run entire kmeans
-        if (kmeans_method == KMEANS_LLOYD) {
+        if (kmeans_method == METHOD_LLOYD) {
             kmeans();
-        } else if (kmeans_method == KMEANS_ELKAN) {
+        } else if (kmeans_method == METHOD_ELKAN) {
             elkan_kmeans();
         } else {
             printf("unrecognized.\n");
@@ -284,9 +269,9 @@ void bcv_kmeans::kmeans() {
     float dfx = 0;
 
     // initialize clusters
-    if (kmeans_init_method == KMEANS_INIT_RANDOM) {
+    if (kmeans_init_method == INIT_RANDOM) {
         init_centers();
-    } else if (kmeans_init_method == KMEANS_INIT_FURTHEST_FIRST) {
+    } else if (kmeans_init_method == INIT_FURTHEST_FIRST) {
         init_centers_furthest_first();
     }
     for (int t = 0; t < num_iterations; ++t) { 
@@ -381,9 +366,9 @@ void bcv_kmeans::elkan_kmeans() {
     float fx_prev = fx;
     float dfx = 0;
     // initialize clusters
-    if (kmeans_init_method == KMEANS_INIT_RANDOM) {
+    if (kmeans_init_method == INIT_RANDOM) {
         init_centers();
-    } else if (kmeans_init_method == KMEANS_INIT_FURTHEST_FIRST) {
+    } else if (kmeans_init_method == INIT_FURTHEST_FIRST) {
         init_centers_furthest_first();
     } else {
         printf("not supported; using random method.\n");

@@ -17,33 +17,33 @@
 namespace bcv {
 using namespace std;
 
-//! kmeans cluster initialization options
-enum {
-    KMEANS_INIT_RANDOM=0,
-    KMEANS_INIT_FURTHEST_FIRST=1 };
-
-//! kmeans algorithm options
-enum {
-    KMEANS_LLOYD=0,
-    KMEANS_ELKAN=1 };
-
 //! A very basic kmeans implementation.
 class bcv_kmeans {
 public:
-    int num_pts;
-    int dim;
-    int K;
-    int num_iterations; 
-    int verbosity;
-    float dfx_tolerance; 
-    int kmeans_init_method; // initialization type
-    int kmeans_method; // lloyd or elkan?
+    //! kmeans cluster initialization options
+    enum {
+        INIT_RANDOM=0,
+        INIT_FURTHEST_FIRST=1 };
+
+    //! kmeans algorithm options
+    enum {
+        METHOD_LLOYD=0,
+        METHOD_ELKAN=1 };
+
+    int num_pts = 0;
+    int dim = 0;
+    int K = 0;
+    int num_iterations = 0; 
+    int verbosity = 0;
+    float dfx_tolerance = 1e-5f; 
+    int kmeans_init_method = INIT_RANDOM; // initialization type
+    int kmeans_method = METHOD_LLOYD; // lloyd or elkan?
  
-    const float* data;
-    float* distance; // distance of point to nearest cluster
-    int* assignments;
-    float* centers;
-    int* count; // number of points belonging to cluster
+    const float* data = NULL;
+    float* distance = NULL; // distance of point to nearest cluster
+    int* assignments = NULL;
+    float* centers = NULL;
+    int* count = NULL; // number of points belonging to cluster
 
     bcv_kmeans();
     bcv_kmeans(const bcv_kmeans& that);
@@ -52,7 +52,7 @@ public:
     bcv_kmeans& operator=(bcv_kmeans&& that);
     bcv_kmeans(const vector<float>& d, int num_pts_, int dim_, int K_, 
             int num_iterations_=100, int verbosity_=0, float dfx_tol=1e-5f, 
-            int init_method = KMEANS_INIT_RANDOM, int solve_method = KMEANS_LLOYD);
+            int init_method = INIT_RANDOM, int solve_method = METHOD_LLOYD);
 
 
     bcv_kmeans(const char* fname);
