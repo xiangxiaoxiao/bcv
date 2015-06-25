@@ -28,12 +28,12 @@ int main(int argc, char** argv) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
     double t1, t2;
     int rows, cols, chan;
-    vector<float> img = bcv_imread<float>(FLAGS_input.c_str(), &rows, &cols, &chan);
+    vector<float> img = bcv::bcv_imread<float>(FLAGS_input.c_str(), &rows, &cols, &chan);
     transform(img.begin(), img.end(), img.begin(), 
                     bind1st( multiplies<float>(), 1.0f/256.0f ) );
 
     printf("Loaded from '%s'\n", FLAGS_input.c_str() );
-    tvdeblur_params params = tvdeblur_params();
+    bcv::tvdeblur_params params = bcv::tvdeblur_params();
     
     params.lambda = FLAGS_lambda;
     params.min_lambda = 1e-4;
@@ -54,15 +54,15 @@ int main(int argc, char** argv) {
     params.chan = chan;
     params.print();
     // ------------------------------------------------------------------------
-    t1 = now_ms();
-    tvdeblur tvdb = tvdeblur(img, params);
+    t1 = bcv::now_ms();
+    bcv::tvdeblur tvdb = bcv::tvdeblur(img, params);
     tvdb.solve();
     vector<float> out = tvdb.result();
-    t2 = now_ms();
+    t2 = bcv::now_ms();
 
     transform(out.begin(), out.end(), out.begin(), 
                     bind1st( multiplies<float>(), 256.0f ) );
-    bcv_imwrite<float>(FLAGS_output.c_str(), out, rows, cols, chan);
+    bcv::bcv_imwrite<float>(FLAGS_output.c_str(), out, rows, cols, chan);
     printf("Wrote the result to '%s'\n", FLAGS_output.c_str() );
     printf("took %.3f s\n", (t2-t1)/1000.0f );
     

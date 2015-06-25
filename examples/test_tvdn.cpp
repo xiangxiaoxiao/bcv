@@ -25,14 +25,14 @@ int main(int argc, char** argv) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
     double t1, t2;
     int rows, cols, chan;
-    vector<float> img = bcv_imread<float>(FLAGS_input.c_str(), &rows, &cols, &chan);
+    vector<float> img = bcv::bcv_imread<float>(FLAGS_input.c_str(), &rows, &cols, &chan);
     if (FLAGS_grayscale) {
-        img = rgb2gray(img);
+        img = bcv::rgb2gray(img);
         chan = 1;
     }
 
     printf("Loaded from '%s'\n", FLAGS_input.c_str() );
-    tvdn_params params = tvdn_params();
+    bcv::tvdn_params params = bcv::tvdn_params();
     params.lambda = FLAGS_lambda;
     params.isotropic = FLAGS_isotropic;    
     params.max_iterations = FLAGS_max_iters;
@@ -46,11 +46,11 @@ int main(int argc, char** argv) {
 
     params.print();
     // ------------------------------------------------------------------------
-    t1 = now_ms();
-    tvdn tv = tvdn(img, params);
+    t1 = bcv::now_ms();
+    bcv::tvdn tv = bcv::tvdn(img, params);
     vector<float> out = tv.result();
-    t2 = now_ms();
-    bcv_imwrite<float>(FLAGS_output.c_str(), out, rows, cols, chan);
+    t2 = bcv::now_ms();
+    bcv::bcv_imwrite<float>(FLAGS_output.c_str(), out, rows, cols, chan);
     printf("Wrote the result to '%s'\n", FLAGS_output.c_str() );
     printf("took %f ms\n", t2-t1);
     return 0;

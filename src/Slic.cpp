@@ -1,5 +1,6 @@
 //! @file Slic.cpp
 #include "Slic.h"
+namespace bcv {
 
 Slic::Slic() {
 }
@@ -940,3 +941,5 @@ vector<unsigned char> Slic::get_boundary_image(
     }
     return img;
 }
+
+} // namespace bcv

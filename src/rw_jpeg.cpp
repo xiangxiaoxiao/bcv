@@ -1,4 +1,5 @@
 #include "rw_jpeg.h"
+namespace bcv {
 
 void write_jpeg_file(const char * filename, unsigned char* img, int width, int height, int channels,
                      int quality) {
@@ -104,7 +105,7 @@ bool isJPG(const char* fname) {
     return ( (strcmp(fname+(n-3),"jpg")==0) || (strcmp(fname+(n-3),"JPG")==0) );
 }
 
-
+} // namespace bcv
 
 
 

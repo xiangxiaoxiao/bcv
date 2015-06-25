@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <numeric>
 
+namespace bcv {
 using namespace std;
 
 //! kmeans cluster initialization options
@@ -72,4 +73,5 @@ private:
     void elkan_compute_cluster_distance(float* D, float* S);
 };
 
+} // namespace bcv
 #endif // BCV_KMEANS_H_

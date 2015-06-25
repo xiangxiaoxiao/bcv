@@ -16,12 +16,13 @@
 #include "bcv_utils.h"
 #include "bcv_diff_ops.h"
 
+namespace bcv {
+using namespace std;
+
 #ifdef HAVE_SSE
 #include <xmmintrin.h>
 #include <pmmintrin.h>
 #endif
-
-using namespace std;
 
 #ifndef BCV_SIGN
 #define BCV_SIGN(x) ( ((x)>0) ? +1 : -1)
@@ -68,4 +69,5 @@ private:
     #endif
 };
 
+} // namespace bcv
 #endif // BCV_TVDN_H_

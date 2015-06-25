@@ -11,6 +11,7 @@
 #include <algorithm>
 #include "bcv_utils.h"
 
+namespace bcv {
 using namespace std;
 
 typedef unsigned char uchar;
@@ -411,4 +412,5 @@ void spgraph_get_id_pairs(vector<int>& p1, vector<int>& p2,
     }
 }
 
+} // namespace bcv
 #endif // SlicGraph_H_

@@ -4,6 +4,9 @@
 #include "bcv_io.h"
 #include <gflags/gflags.h>
 
+using namespace std;
+using bcv::uchar;
+
 DEFINE_string(input, "./images/arches.jpg","input image");
 DEFINE_string(output, "out.jpg","output image");
 DEFINE_bool(sepia, false, "do sepia?");
@@ -24,31 +27,31 @@ int main(int argc, char** argv) {
     double t1, t2;
     int rows, cols, chan;
 
-    vector<float> img = bcv_imread<float>(
+    vector<float> img = bcv::bcv_imread<float>(
     							FLAGS_input.c_str(), &rows, &cols, &chan);
 
-    if (FLAGS_rgb2hsv) { 
-        t1 = now_ms();
-        rgb2hsv(img);
-	    t2 = now_ms();
+    if (FLAGS_rgb2hsv) { // rgb to hsv and back
+        t1 = bcv::now_ms();
+        bcv::rgb2hsv(img);
+	    t2 = bcv::now_ms();
         printf("rgb2hsv took: %f ms on %dx%d image\n", t2-t1, rows, cols);
     
-        t1 = now_ms();
-        hsv2rgb(img);
-	    t2 = now_ms();
+        t1 = bcv::now_ms();
+        bcv::hsv2rgb(img);
+	    t2 = bcv::now_ms();
         printf("hsv2rgb took: %f ms on %dx%d image\n", t2-t1, rows, cols);
     }
 
-    if (FLAGS_hist_eq) { 
+    if (FLAGS_hist_eq) { // histogram equalization
         vector<uchar> I;
         I.assign(img.begin(), img.end());
-        t1 = now_ms();
-        hist_eq(I, chan);  
-	    t2 = now_ms();
+        t1 = bcv::now_ms();
+        bcv::hist_eq(I, chan);  
+	    t2 = bcv::now_ms();
         printf("histogram equalization took: %f ms on %dx%d image\n", t2-t1, rows, cols);
         img.assign(I.begin(), I.end());
     }
-    if (!FLAGS_modulate.empty()) {
+    if (!FLAGS_modulate.empty()) { // modulation in HSV space
         // parse string.
         vector<float> mod_vals;
         float val;
@@ -62,15 +65,15 @@ int main(int argc, char** argv) {
             printf("should be comma-separated list of three values.\n");
             printf("got %s\n", FLAGS_modulate.c_str());
         } else if (!((mod_vals[0]==1) && (mod_vals[1]==1) && (mod_vals[2]==0))) {
-            t1 = now_ms();
-            rgb2hsv(img);
-            modulate(img, mod_vals[0], mod_vals[1], mod_vals[2]); 
-            hsv2rgb(img);
-            t2 = now_ms();
+            t1 = bcv::now_ms();
+            bcv::rgb2hsv(img);
+            bcv::modulate(img, mod_vals[0], mod_vals[1], mod_vals[2]); 
+            bcv::hsv2rgb(img);
+            t2 = bcv::now_ms();
             printf("modulation took: %f ms on %dx%d image\n", t2-t1, rows, cols);
         }
     }
-    if (!FLAGS_tint.empty()) {
+    if (!FLAGS_tint.empty()) { // tint
         // parse string.
         vector<float> mod_vals;
         float val;
@@ -89,41 +92,41 @@ int main(int argc, char** argv) {
             rgb_val[1] = mod_vals[1];
             rgb_val[2] = mod_vals[2];
             float alpha = mod_vals[3];
-            t1 = now_ms();
-            tint(img, rgb_val, alpha);
-            t2 = now_ms();
+            t1 = bcv::now_ms();
+            bcv::tint(img, rgb_val, alpha);
+            t2 = bcv::now_ms();
             printf("tint took: %f ms on %dx%d image\n", t2-t1, rows, cols);
         }
     }
 
 
 
-    if (FLAGS_gamma >= 0) { 
-        t1 = now_ms();
-        gamma_adjustment(img, FLAGS_gamma);
-        t2 = now_ms();
+    if (FLAGS_gamma >= 0) { // gamma adjustment
+        t1 = bcv::now_ms();
+        bcv::gamma_adjustment(img, FLAGS_gamma);
+        t2 = bcv::now_ms();
         printf("gamma adjustment took: %f ms on %dx%d image\n", t2-t1, rows, cols);
     }
-    if (FLAGS_sepia) {
-        t1 = now_ms();
-        sepia(img, FLAGS_sepia_i, FLAGS_sepia_q);
-        t2 = now_ms();
+    if (FLAGS_sepia) { // sepia
+        t1 = bcv::now_ms();
+        bcv::sepia(img, FLAGS_sepia_i, FLAGS_sepia_q);
+        t2 = bcv::now_ms();
         printf("sepia took: %f ms on %dx%d image\n", t2-t1, rows, cols);
     }
-    if (FLAGS_vintage) { 
-        t1 = now_ms();
-        vintage(img);
-        t2 = now_ms();
+    if (FLAGS_vintage) { // vintage-esque
+        t1 = bcv::now_ms();
+        bcv::vintage(img);
+        t2 = bcv::now_ms();
         printf("vintage took: %f ms on %dx%d image\n", t2-t1, rows, cols);
     }
 
     if (FLAGS_vignette) { 
-        t1 = now_ms();
-        vignette(img, rows, cols, chan, FLAGS_vignette_sigma);
-	    t2 = now_ms();
+        t1 = bcv::now_ms();
+        bcv::vignette(img, rows, cols, chan, FLAGS_vignette_sigma);
+	    t2 = bcv::now_ms();
         printf("vignette took: %f ms on %dx%d image\n", t2-t1, rows, cols);
     }
 
-    bcv_imwrite<float>(FLAGS_output.c_str(), img, rows, cols, chan);
+    bcv::bcv_imwrite<float>(FLAGS_output.c_str(), img, rows, cols, chan);
     return 0;
 }

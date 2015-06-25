@@ -9,6 +9,7 @@
 #include <cassert>
 #include "bcv_utils.h"
 
+namespace bcv {
 using namespace std;
 
 //! resize image (isotropically)
@@ -123,4 +124,5 @@ void inline hsv2rgb_one(float* x) {
     }
 }
 
+} // namespace bcv
 #endif // BCV_IMGPROC_H_

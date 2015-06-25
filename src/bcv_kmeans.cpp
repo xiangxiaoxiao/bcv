@@ -1,5 +1,6 @@
 //! @file bcv_kmeans.cpp
 #include "bcv_kmeans.h"
+namespace bcv {
 
 bcv_kmeans::bcv_kmeans() { 
     num_pts = 0;
@@ -582,3 +583,5 @@ void bcv_kmeans::save(const char* fname) {
 
     fclose(fid);
 }
+
+} // namespace bcv

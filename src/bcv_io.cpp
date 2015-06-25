@@ -1,6 +1,6 @@
 //! @file bcv_io.cpp
 #include "bcv_io.h"
-
+namespace bcv {
 //! Returns a vector of strings, where each string is a line from a given file.
 vector<string> read_file_lines(const char* fname) {
     string l;
@@ -21,3 +21,5 @@ vector<string> read_file_lines(const char* fname) {
     fp.close();
     return lines;
 }
+
+} // namespace bcv

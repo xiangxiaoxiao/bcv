@@ -9,6 +9,7 @@
 #include <set>
 #include "assert.h"
 
+namespace bcv {
 using namespace std;
 
 #ifndef BCV_UCHAR_TYPEDEF_
@@ -44,5 +45,6 @@ vector<int> choose_random_subset(int k, int n);
 unsigned long now_us();
 double now_ms();
 
+} // namespace bcv
 
 #endif // BCV_UTILS_H_

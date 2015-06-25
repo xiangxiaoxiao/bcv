@@ -7,6 +7,7 @@
 #include "bcv_utils.h"
 #include "bcv_diff_ops.h"
 
+namespace bcv {
 using namespace std;
 
 //! tv segmentation parameters.
@@ -46,4 +47,5 @@ class tvsegment {
         void project_onto_prob_simplex(vector<float>& x);
 };
 
+} // namespace bcv
 #endif // BCV_TVSEGMENT_H_

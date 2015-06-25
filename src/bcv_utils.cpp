@@ -1,6 +1,7 @@
 //! @file bcv_basic.cpp
 #include "bcv_utils.h"
 
+namespace bcv {
 //! returns time in microseconds
 unsigned long now_us() {
     struct timeval tv;
@@ -37,3 +38,5 @@ vector<int> choose_random_subset(int k, int n) {
     }
     return s;
 }
+
+} // namespace bcv

@@ -1,6 +1,6 @@
 // @file tvsegment.cpp
 #include "tvsegment.h"
-
+namespace bcv {
 tvsegment::tvsegment() { }
 
 tvsegment::~tvsegment() { }
@@ -150,3 +150,4 @@ void tvsegment::project_onto_prob_simplex(vector<float>& x) {
         }
     }
 }
+} // namespace bcv

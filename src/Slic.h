@@ -13,6 +13,7 @@
 #include <set>
 #include "bcv_utils.h"
 
+namespace bcv {
 using namespace std;
 
 struct cluster {
@@ -87,4 +88,5 @@ private:
     int get_distance_weight(int level);
 };
 
+} // namespace bcv
 #endif  // Slic_H_

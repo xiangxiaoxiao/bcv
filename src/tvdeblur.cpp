@@ -1,5 +1,6 @@
 // @file tvdeblur.cpp
 #include "tvdeblur.h"
+namespace bcv {
 
 tvdeblur_params::tvdeblur_params() {
     lambda = 1e-3f;
@@ -436,3 +437,4 @@ vector<float> tvdeblur::interleave_channels(const vector<float>& in, int chan) {
     }
     return out;
 }
+} // namespace bcv

@@ -21,6 +21,7 @@
 #include <pmmintrin.h>
 #endif
 
+namespace bcv {
 using namespace std;
 
 #ifndef BCV_SIGN
@@ -124,4 +125,5 @@ private:
     vector<float> interleave_channels(const vector<float>& in, int chan);
 };
 
+} // namespace bcv
 #endif // BCV_TVDEBLUR_H_

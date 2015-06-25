@@ -7,9 +7,10 @@
 #include <gflags/gflags.h>
 
 using namespace std;
+using bcv::linear_index;
 
-void compute_unary_term(const vector<float>& img, tvsegment_params* p); 
-void print_tvsegment_params(tvsegment_params* p);
+void compute_unary_term(const vector<float>& img, bcv::tvsegment_params* p); 
+void print_tvsegment_params(bcv::tvsegment_params* p);
 vector<float> segutils_vis_segmentation(const vector<float>& u, 
                     int rows, int cols, int chan, const vector<float>& clusters, 
                     int show_rounded, int show_boundary);
@@ -30,9 +31,9 @@ int main(int argc, char** argv) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
     double t1, t2;
     int rows, cols, chan;
-    vector<float> img = bcv_imread<float>(FLAGS_input.c_str(), &rows, &cols, &chan);
+    vector<float> img = bcv::bcv_imread<float>(FLAGS_input.c_str(), &rows, &cols, &chan);
 
-    tvsegment_params params;
+    bcv::tvsegment_params params;
     params.beta = FLAGS_beta;
     params.lambda = FLAGS_lambda;
     params.max_iters = FLAGS_max_iters;
@@ -50,9 +51,9 @@ int main(int argc, char** argv) {
 
     print_tvsegment_params(&params);
 
-    t1 = now_ms();
-    tvsegment tvs = tvsegment(img, &params);
-    t2 = now_ms();
+    t1 = bcv::now_ms();
+    bcv::tvsegment tvs = bcv::tvsegment(img, &params);
+    t2 = bcv::now_ms();
     printf("TV segmentation took: %f ms\n", (t2-t1) );
    
     int show_rounded = 1;
@@ -62,12 +63,12 @@ int main(int argc, char** argv) {
             rows, cols, chan, params.clusters, FLAGS_show_rounded, FLAGS_show_boundary );
 
     for (size_t i = 0; i < out.size(); ++i) { out[i] *= 256; }
-    bcv_imwrite<float>(FLAGS_output.c_str(), out, rows, cols, chan);
+    bcv::bcv_imwrite<float>(FLAGS_output.c_str(), out, rows, cols, chan);
     printf("Wrote the result to '%s'\n", FLAGS_output.c_str() );
     return 0;
 }
 
-void print_tvsegment_params(tvsegment_params* p) {
+void print_tvsegment_params(bcv::tvsegment_params* p) {
     printf("lambda: %f\n", p->lambda);
     printf("beta: %f\n", p->beta);
     printf("num-clusters: %d\n", p->num_clusters);
@@ -76,7 +77,7 @@ void print_tvsegment_params(tvsegment_params* p) {
     printf("image size: %dx%dx%d\n", p->rows, p->cols, p->chan);
 }
 
-void compute_unary_term(const vector<float>& img, tvsegment_params* p) {
+void compute_unary_term(const vector<float>& img, bcv::tvsegment_params* p) {
     // cluster image values based on intentity
     int num_pts = img.size()/p->chan;
     int dim = p->chan;
@@ -84,7 +85,7 @@ void compute_unary_term(const vector<float>& img, tvsegment_params* p) {
     int num_iterations = 100;
 
     printf("kmeans: n pts: %d, dim: %d, K: %d\n", num_pts, dim, K);
-    bcv_kmeans km = bcv_kmeans(img, num_pts, dim, K, num_iterations);
+    bcv::bcv_kmeans km = bcv::bcv_kmeans(img, num_pts, dim, K, num_iterations);
     km.get_centers(p->clusters);
     
     printf("learned cluster centers:\n");

@@ -1,6 +1,7 @@
 //! @file bcv_diff_ops.cpp
 #include "bcv_diff_ops.h"
 
+namespace bcv {
 
 void apply_pixelwise_gradient_op(vector<float>& out, const vector<float>& in, int rows, int cols, int chan) { 
     if (chan==1) { apply_pixelwise_gradient_op(out, in, rows, cols); return; }
@@ -619,5 +620,9 @@ void apply_dxt_matlab_sse(float* out, const float* in, int rows, int cols, int c
 }
 
 #endif
+
+
+} // namespace
+
 // -----------------------------------------------------------------
 

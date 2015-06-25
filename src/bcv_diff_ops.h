@@ -31,7 +31,8 @@
 #include <pmmintrin.h>
 #endif
 
-using namespace std;
+namespace bcv { 
+using std::vector;
 
 //! Applies pixelwise gradient operator:
 //!         out = [D_x( img ); D_y( img )];
@@ -87,5 +88,7 @@ void apply_dy_matlab_sse(float* out, const float* in, int rows, int cols, int ch
 //! result is 'ADDED' to the 'out' vector (not 'REPLACED')  
 void apply_dyt_matlab_sse(float* out, const float* in, int rows, int cols, int chan=1);
 #endif
+
+}
 
 #endif // SPARSE_OP_H_

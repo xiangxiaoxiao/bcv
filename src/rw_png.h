@@ -1,10 +1,10 @@
-
 #include <cstdlib>
 #include <iostream>
 #include <cstdio>
 #include <cstring>
 
 #include "png.h"
+namespace bcv {
 using namespace std;
 
 /* This code is based on example.c included in libpng package. */
@@ -23,3 +23,5 @@ int write_png_file(const char *file_name, unsigned char* img, int width, int hei
 /*! check the extension as the MOST BASIC POSSIBLE check for
     whether a file is png or not. */
 bool isPNG(const char* fname);
+
+} // namespace bcv 

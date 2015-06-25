@@ -2,6 +2,7 @@
 #define int_p_NULL (int*)NULL
 #include "rw_png.h"
 
+namespace bcv {
 int read_png_file(const char *file_name, unsigned char** img, int* width, int* height,
                   int* channels) {
     int ERROR = 1;
@@ -179,3 +180,5 @@ bool isPNG(const char *fname) {
     int n = strlen(fname);
     return ( (strcmp(fname+(n-3),"png")==0) || (strcmp(fname+(n-3),"PNG")==0) );
 }
+
+} // namespace bcv

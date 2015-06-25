@@ -1,5 +1,5 @@
 #include "bcv_imgproc.h"
-
+namespace bcv {
 vector<float> imresize(const vector<float>& in, int in_rows, int in_cols, int out_rows, int out_cols) {
     if ((in_rows == out_rows) && (in_cols == out_cols)) { return in; }
     float scale_y = ((float)out_rows) / ((float)in_rows );
@@ -177,3 +177,5 @@ vector<float> rgb2gray(const vector<float>& x) {
     for (int i = 0; i < n; ++i) { z[i] = (x[3*i]+x[3*i+1]+x[3*i+2])/3.0f; }
     return z;
 }
+
+} // namespace bcv

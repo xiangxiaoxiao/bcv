@@ -1,5 +1,6 @@
 // @file tvdn.cpp
 #include "tvdn.h"
+namespace bcv {
 
 tvdn_params::tvdn_params() {
     lambda = 1;
@@ -241,4 +242,5 @@ void tvdn::solve_y_sse(float sigma_y, float lambda, int chan, int isotropic) {
     }
 }
 
+} // namespace bcv
 #endif

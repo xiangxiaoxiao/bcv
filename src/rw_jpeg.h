@@ -8,6 +8,7 @@
 #include "jpeglib.h"
 #include "setjmp.h"
 
+namespace bcv {
 using namespace std;
 /* This code is based on example.c included in libjpeg package. */
 
@@ -39,4 +40,5 @@ METHODDEF(void) my_error_exit(j_common_ptr cinfo) {
 
 bool isJPG(const char* fname);
 
+} // namespace bcv
 #endif  // RW_JPEG_H_

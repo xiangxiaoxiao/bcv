@@ -12,6 +12,8 @@
 
 #include "rw_png.h"
 #include "rw_jpeg.h"
+
+namespace bcv {
 using namespace std;
 
 #ifndef BCV_UCHAR_TYPEDEF_
@@ -97,4 +99,5 @@ inline int file_exists(const char* fname) {
 //! Returns a vector of lines from file.
 vector<string> read_file_lines(const char* fname);
 
-#endif
+} // namespace bcv
+#endif // BCV_IO_H_
