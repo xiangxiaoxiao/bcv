@@ -47,10 +47,14 @@ public:
 
     bcv_kmeans();
     bcv_kmeans(const bcv_kmeans& that);
+    bcv_kmeans(bcv_kmeans&& that); 
     bcv_kmeans& operator=(const bcv_kmeans& that);
+    bcv_kmeans& operator=(bcv_kmeans&& that);
     bcv_kmeans(const vector<float>& d, int num_pts_, int dim_, int K_, 
             int num_iterations_=100, int verbosity_=0, float dfx_tol=1e-5f, 
             int init_method = KMEANS_INIT_RANDOM, int solve_method = KMEANS_LLOYD);
+
+
     bcv_kmeans(const char* fname);
     ~bcv_kmeans(); 
     void init_centers();

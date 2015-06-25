@@ -29,8 +29,8 @@ int main(int argc, char** argv) {
     int rows, cols, chan;
     vector<uchar> img = bcv::bcv_imread<uchar>(FLAGS_input.c_str(), &rows, &cols, &chan);
 
-    bcv::Slic slic = bcv::Slic(img, rows, cols, chan, 
-                        FLAGS_K, FLAGS_M, FLAGS_num_iters, FLAGS_max_levels);
+    bcv::Slic slic(img, rows, cols, chan, 
+                   FLAGS_K, FLAGS_M, FLAGS_num_iters, FLAGS_max_levels);
     t1 = bcv::now_ms();
     vector<int> sp = slic.segment(); // basic segmentation call.
     t2 = bcv::now_ms();

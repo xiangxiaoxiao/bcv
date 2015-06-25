@@ -44,6 +44,27 @@ bcv_kmeans::bcv_kmeans(const bcv_kmeans& that) {
     memcpy(centers, that.centers, sizeof(float)*dim*K);
     memcpy(count, that.count, sizeof(int)*K);
 }
+bcv_kmeans::bcv_kmeans(bcv_kmeans&& that) {
+    num_pts = that.num_pts;
+    dim = that.dim;
+    K = that.K;
+    num_iterations = that.num_iterations;
+    data = that.data;
+    verbosity = that.verbosity;
+    dfx_tolerance = that.dfx_tolerance;
+    kmeans_init_method = that.kmeans_init_method;
+    kmeans_method = that.kmeans_method;
+
+    if (distance) { delete distance; }
+    if (assignments) { delete assignments; }
+    if (centers) { delete centers; }
+    if (count) { delete count; }
+    
+    distance = that.distance; that.distance = NULL;
+    assignments = that.assignments; that.assignments = NULL;
+    centers = that.centers; that.centers = NULL;
+    count = that.count; that.count = NULL;
+}
 
 bcv_kmeans& bcv_kmeans::operator=(const bcv_kmeans& that) {
     num_pts = that.num_pts;
@@ -69,6 +90,28 @@ bcv_kmeans& bcv_kmeans::operator=(const bcv_kmeans& that) {
     memcpy(assignments, that.assignments, sizeof(int)*num_pts);
     memcpy(centers, that.centers, sizeof(float)*dim*K);
     memcpy(count, that.count, sizeof(int)*K);
+    return *this;
+}
+bcv_kmeans& bcv_kmeans::operator=(bcv_kmeans&& that) {
+    num_pts = that.num_pts;
+    dim = that.dim;
+    K = that.K;
+    num_iterations = that.num_iterations;
+    data = that.data;
+    verbosity = that.verbosity;
+    dfx_tolerance = that.dfx_tolerance;
+    kmeans_init_method = that.kmeans_init_method;
+    kmeans_method = that.kmeans_method;
+
+    if (distance) { delete distance; }
+    if (assignments) { delete assignments; }
+    if (centers) { delete centers; }
+    if (count) { delete count; }
+    
+    distance = that.distance; that.distance = NULL;
+    assignments = that.assignments; that.assignments = NULL;
+    centers = that.centers; that.centers = NULL;
+    count = that.count; that.count = NULL;
     return *this;
 }
 
@@ -371,8 +414,6 @@ void bcv_kmeans::elkan_kmeans() {
         // actually here should exit the program altogether.
         // since any subsequent result of kmeans will be invalid.
     }
-    
-    
 
     elkan_compute_cluster_distance(Dcenters, S);
     for (int i = 0; i < num_pts; ++i) { 

@@ -31,7 +31,7 @@ LIBBCV = -L$(LIB)/ -lbcv
 FFMPEG_LIBS=    -lavdevice -lavformat -lavfilter \
 				-lavcodec -lswresample -lswscale -lavutil
 #------------------------------------------------------------------------------
-CXXFLAGS = -g -fPIC -Wall -pedantic 
+CXXFLAGS = -std=gnu++11 -fPIC -Wall -pedantic 
 CXXFLAGS += -march=native -mtune=native -msse3 -DHAVE_SSE
 BCVLIB_OBJS = rw_jpeg.o rw_png.o bcv_io.o bcv_diff_ops.o bcv_utils.o \
 bcv_kmeans.o Slic.o tvsegment.o tvdn.o tvdeblur.o bcv_imgproc.o

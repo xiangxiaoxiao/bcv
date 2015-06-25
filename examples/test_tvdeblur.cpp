@@ -33,8 +33,8 @@ int main(int argc, char** argv) {
                     bind1st( multiplies<float>(), 1.0f/256.0f ) );
 
     printf("Loaded from '%s'\n", FLAGS_input.c_str() );
-    bcv::tvdeblur_params params = bcv::tvdeblur_params();
-    
+    bcv::tvdeblur_params params;
+
     params.lambda = FLAGS_lambda;
     params.min_lambda = 1e-4;
     params.annealing_rate = 0.999f;
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     params.print();
     // ------------------------------------------------------------------------
     t1 = bcv::now_ms();
-    bcv::tvdeblur tvdb = bcv::tvdeblur(img, params);
+    bcv::tvdeblur tvdb(img, params);
     tvdb.solve();
     vector<float> out = tvdb.result();
     t2 = bcv::now_ms();

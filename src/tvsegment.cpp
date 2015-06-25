@@ -1,9 +1,6 @@
 // @file tvsegment.cpp
 #include "tvsegment.h"
 namespace bcv {
-tvsegment::tvsegment() { }
-
-tvsegment::~tvsegment() { }
 
 tvsegment::tvsegment(const vector<float>& img, tvsegment_params* p) { 
     rows = p->rows;

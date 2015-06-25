@@ -31,29 +31,33 @@ using namespace std;
 //! denoising parameters
 class tvdn_params {
 public:
-    float lambda; //! weight of TV penalty
-    int max_iterations; //! maximum number of iterations
-    float dx_tolerance; //! step tolerance per pixel
-    int isotropic; //! 0=anisotropic, 1=isotropic xy
-    int verbosity;
-    bool accelerated; // acceleration 
-    float gamma; // acceleration parameter
-    float sigma_x;
-    float sigma_y;
-    int rows;
-    int cols;
-    int chan;
-    tvdn_params();
+    float lambda = 1.0f; //! weight of TV penalty
+    int max_iterations = 1000; //! maximum number of iterations
+    float dx_tolerance = 1e-5f; //! step tolerance per pixel
+    int isotropic = 1; //! 0=anisotropic, 1=isotropic xy
+    int verbosity = numeric_limits<int>::max();
+    bool accelerated = true; // acceleration 
+    float gamma = 1.0f; // acceleration parameter
+    float sigma_x = 0.95f/sqrt(8.0f);
+    float sigma_y = 0.95f/sqrt(8.0f);
+    int rows = 0;
+    int cols = 0;
+    int chan = 0;
+
     void print();
-    ~tvdn_params() {};
 };
 
 class tvdn {
 public:
     tvdn(const vector<float>& img, const tvdn_params& p);
     tvdn();
-    vector<float> result();
+    tvdn(const tvdn& other) = delete; // no copy constructor!
+    tvdn(const tvdn&& other) = delete; // no move constructor!
+    tvdn& operator=(const tvdn& other) = delete; // no copy assignment op!
+    tvdn& operator=(const tvdn&& other) = delete; // no move assignment op!
     ~tvdn();
+
+    vector<float> result();
 private:
     vector<float> x;    
     vector<float> x_bar;

@@ -2,20 +2,6 @@
 #include "tvdeblur.h"
 namespace bcv {
 
-tvdeblur_params::tvdeblur_params() {
-    lambda = 1e-3f;
-    min_lambda = 1e-5f;
-    annealing_rate = 0.999f;
-    max_iterations = 5;
-    max_anneal_rounds = 10000;
-    grad_descent_step_u = 5e-3f;
-    grad_descent_step_k = 1e-3f;
-    dfx_tolerance = 1e-4f;
-    ker_size = 9;
-    verbosity = 100;
-    eps = 1e-5f;
-}
-
 void tvdeblur_params::print() { 
     printf("deblurring parameters.\n");
     printf("---------------------\n");

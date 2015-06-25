@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
     print_tvsegment_params(&params);
 
     t1 = bcv::now_ms();
-    bcv::tvsegment tvs = bcv::tvsegment(img, &params);
+    bcv::tvsegment tvs(img, &params);
     t2 = bcv::now_ms();
     printf("TV segmentation took: %f ms\n", (t2-t1) );
    
@@ -85,7 +85,7 @@ void compute_unary_term(const vector<float>& img, bcv::tvsegment_params* p) {
     int num_iterations = 100;
 
     printf("kmeans: n pts: %d, dim: %d, K: %d\n", num_pts, dim, K);
-    bcv::bcv_kmeans km = bcv::bcv_kmeans(img, num_pts, dim, K, num_iterations);
+    bcv::bcv_kmeans km(img, num_pts, dim, K, num_iterations);
     km.get_centers(p->clusters);
     
     printf("learned cluster centers:\n");

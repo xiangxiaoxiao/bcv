@@ -2,21 +2,6 @@
 #include "tvdn.h"
 namespace bcv {
 
-tvdn_params::tvdn_params() {
-    lambda = 1;
-    max_iterations = 1000;
-    verbosity = numeric_limits<int>::max();
-    dx_tolerance = 1e-5f;
-    isotropic = 1;
-    accelerated = true;
-    gamma = 1.0f;
-
-    sigma_x = 0.95f/sqrt(8.0f);
-    sigma_y = 0.95f/sqrt(8.0f);
-    rows = 0;
-    cols = 0;
-    chan = 0;
-}
 void tvdn_params::print() {
     printf("lambda: %f\n", lambda);
     printf("isotropic: %d\n", isotropic);

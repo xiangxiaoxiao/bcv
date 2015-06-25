@@ -32,28 +32,26 @@ enum truncation_type { TRUNCATION_FULL, TRUNCATION_SAME, TRUNCATION_VALID };
 //! deblurring parameters
 class tvdeblur_params {
 public:
-    float lambda; //! (initial) weight of TV penalty
-    float min_lambda; //! (final) weight of TV penalty (after annealing)
-    float annealing_rate; //! rate by which lambda decreases
-    int max_iterations; //! max number of iterations
-    int max_anneal_rounds; //! max number of annealing rounds
-    float grad_descent_step_u; //! step length in gradient descent (over image) 
-    float grad_descent_step_k; //! step length in gradient descent (over kernel)
-    float dfx_tolerance; //! smallest ( f(x)-f(x_+) )/f(x)
-    int ker_size; // kernel size 
-    int verbosity;
+    float lambda = 1e-3f; //! (initial) weight of TV penalty
+    float min_lambda = 1e-5f; //! (final) weight of TV penalty (after annealing)
+    float annealing_rate = 0.999f; //! rate by which lambda decreases
+    int max_iterations = 5; //! max number of iterations
+    int max_anneal_rounds = 10000; //! max number of annealing rounds
+    float grad_descent_step_u = 5e-3f; //! step length in gradient descent (over image) 
+    float grad_descent_step_k = 1e-3f; //! step length in gradient descent (over kernel)
+    float dfx_tolerance = 1e-4f; //! smallest ( f(x)-f(x_+) )/f(x)
+    int ker_size = 9; // kernel size 
+    int verbosity = 100;
     // pyramid parameters
-    int pyramid_numlevels;
-    float pyramid_imsize_scaling; // how much to resize the image at each time? (<1)
-    float pyramid_lambda_scaling; // how much to increase lambda at each time (>1)
-
+    int pyramid_numlevels = 1;
+    float pyramid_imsize_scaling = 1; // how much to resize the image at each time? (<1)
+    float pyramid_lambda_scaling = 1; // how much to increase lambda at each time (>1)
     // other parameters
-    int rows;
-    int cols;
-    int chan;
-    float eps; // smoothing parameter of the L1 norm
-    tvdeblur_params();
-    ~tvdeblur_params() {};
+    int rows = 0;
+    int cols = 0;
+    int chan = 0;
+    float eps = 1e-4; // smoothing parameter of the L1 norm
+
     void print();
 };
 
@@ -67,9 +65,13 @@ struct pyramid_size {
 
 class tvdeblur {
 public:
-    tvdeblur(const vector<float>& img, const tvdeblur_params& p);
+    tvdeblur(const vector<float>& img, const tvdeblur_params& p);   
     tvdeblur();
     ~tvdeblur();
+    tvdeblur(const tvdeblur& other) = delete; // no copy constructor!
+    tvdeblur(const tvdeblur&& other) = delete; // no move constructor!
+    tvdeblur& operator=(const tvdeblur& other) = delete; // no copy assignment op!
+    tvdeblur& operator=(const tvdeblur&& other) = delete; // no move assignment op!
 
     vector<float> result();
     void solve_inner(float lambda);

@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     params.print();
     // ------------------------------------------------------------------------
     t1 = bcv::now_ms();
-    bcv::tvdn tv = bcv::tvdn(img, params);
+    bcv::tvdn tv(img, params);
     vector<float> out = tv.result();
     t2 = bcv::now_ms();
     bcv::bcv_imwrite<float>(FLAGS_output.c_str(), out, rows, cols, chan);

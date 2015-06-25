@@ -28,8 +28,10 @@ class tvsegment {
     public:
         //! main function that performs optimization
         tvsegment(const vector<float>& img, tvsegment_params* p);
-        ~tvsegment();
-        tvsegment();
+        tvsegment(const tvsegment& other) = delete; // no copy constructor!
+        tvsegment(const tvsegment&& other) = delete; // no move constructor!
+        tvsegment& operator=(const tvsegment& other) = delete; // no copy assignment op!
+        tvsegment& operator=(const tvsegment&& other) = delete; // no move assignment op!
         vector<int> get_assignments();
         vector<float> get_result();
         vector<float> get_weights();

@@ -48,7 +48,13 @@ public:
     Slic();
     ~Slic();
     Slic(const vector<unsigned char>& img, int rows_, int cols_, int chan_, 
-            int K_=200, int M_=100, int num_iters_=10, int max_levels_=3, float scale_factor_=2);
+            int K_=200, int M_=100, int num_iters_=10, 
+            int max_levels_=3, float scale_factor_=2);
+    Slic(const Slic& other) = delete; // no copy constructor!
+    Slic(const Slic&& other) = delete; // no move constructor!
+    Slic& operator=(const Slic& other) = delete; // no copy assignment op!
+    Slic& operator=(const Slic&& other) = delete; // no move assignment op!
+
     void reset_image(const vector<unsigned char>& img);
     vector<int> segment();
     // a few printouts (to std)
