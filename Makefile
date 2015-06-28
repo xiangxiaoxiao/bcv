@@ -2,7 +2,7 @@ all: website
 
 SRC=website-src/
 
-MD_OBJS = index.md changelog.md installation.md test_slic.md test_tvsegment.md test_tvdn.md
+MD_OBJS = index.md changelog.md installation.md test_slic.md test_tvsegment.md test_tvdn.md test_tvdeblur.md
 
 %.md:
 	cat $(SRC)/index-header.txt > $(subst .md,.html, $@)

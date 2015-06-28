@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>bcv: basic computer vision</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+	<!-- mathjax scripts start here -->	
+	<script type="text/javascript"
+	  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+	</script>
+	<script type="text/x-mathjax-config">
+	  	MathJax.Hub.Config({
+		  jax: ["input/TeX","output/HTML-CSS"],
+		  extensions: ["tex2jax.js","MathMenu.js","MathZoom.js"],
+		  TeX: {
+		    extensions: ["AMSmath.js","AMSsymbols.js","noErrors.js","noUndefined.js"]
+		  }
+		});
+	</script>
+	<script type="text/x-mathjax-config">
+	  	MathJax.Hub.Config({
+  		  "HTML-CSS": {
+    	  preferredFont: "TeX",
+    	  availableFonts: ["TeX"]
+  		  }
+		});
+	</script>
+	<script type="text/x-mathjax-config">
+	  MathJax.Hub.Config({tex2jax: {
+	  	inlineMath: [['$','$'], ['\\(','\\)']]}});
+	</script>
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1><a href="http://vasiliykarasev.github.io/bcv/">bcv: basic computer vision</a></h1>
+        <hr class="dashed">
+      </header>
+      <section>
+<h2>Blind TV deblurring (test_tvdeblur)</h2>
+<figure>
+<a href="website-images/tvdeblur_mandril_cat.jpg">
+<img src="website-images/tvdeblur_mandril_cat.jpg" alt="tv deblurring mandril"/>
+</a>
+<figcaption>Left: original image. Middle: blurred image. Right: deblurring result.</figcaption>
+</figure>
+
+<p>This example is about blind total variation deblurring. Given a blurry image (<mathjax>$f$</mathjax>), the goal is to simultaneously find a sharp image (<mathjax>$u$</mathjax>) and the blur kernel (<mathjax>$k$</mathjax>). This can be formulated as
+<mathjax>$$
+\min_{u,k} \| u * k - f \|_2^2 + \lambda TV(u) \text{ s.t. } k\geq 0, 1^T k = 1
+$$</mathjax>
+where <mathjax>$*$</mathjax> is the convolution operator and <mathjax>$TV(u)$</mathjax> is the total variation penalty:
+<mathjax>$$
+TV(u) = \sum_{ij}\sqrt{ (u_{i,j+1}-u_{i,j})^2 + (u_{i+1,j}-u_{i,j})^2 }
+$$</mathjax></p>
+<p>This problem is nonconvex and is solved by taking gradient steps along <mathjax>$u$</mathjax> and <mathjax>$k$</mathjax>. The code is a reimplementation of [1] (see also their project webpage).</p>
+<h3>Examples</h3>
+<p>For the synthetically blurred mandril image above, the call is:</p>
+<pre><code>./test_tvdeblur --lambda=0.1 --input=../images/blur/mandril_blur.png --verbosity=100
+</code></pre>
+<p>and the output is:</p>
+<pre><code>Wrote the result to 'out.png'
+took 717.818 s
+</code></pre>
+<p>The implements convolutions with FFTs, and is not very particularly fast. This is the time it takes to deblur a 256x256 image.
+Several additional examples are shown below.</p>
+<figure>
+<a href="website-images/tvdeblur_milan_cat.jpg">
+<img class="center" src="website-images/tvdeblur_milan_blur.jpg" onmouseover="this.src='website-images/tvdeblur_milan_result.jpg'" onmouseout="this.src='website-images/tvdeblur_milan_blur.jpg'" border="0" alt=""/>
+</a>
+<figcaption>Deblurred image appears on mouseover (and the pair is linked). The recovered blur kernel is shown in top left corner. Notice that although most of the image is clearer, errors persist near statues' heads. </figcaption>
+</figure>
+
+<figure>
+<a href="website-images/tvdeblur_fish_cat.jpg">
+<img class="center" src="website-images/tvdeblur_fish_blur.jpg" onmouseover="this.src='website-images/tvdeblur_fish_result.jpg'" onmouseout="this.src='website-images/tvdeblur_fish_blur.jpg'" border="0" alt=""/></a>
+<figcaption>This example is difficult: ocean floor appears a vague texture. But the algorithm is able to recover some details! Since the fish is moving, its ``blur'' is different from the rest of the image. As a result, some ghosting persists.</figcaption>
+</figure>
+
+<figure>
+<a href="website-images/tvdeblur_notredame_cat.jpg">
+<img class="center" src="website-images/tvdeblur_notredame_blur.jpg" onmouseover="this.src='website-images/tvdeblur_notredame_result.jpg'" onmouseout="this.src='website-images/tvdeblur_notredame_blur.jpg'" border="0" alt=""/></a>
+<figcaption>This example is simple. Although some ghosting persists, overall the image is clearer.</figcaption>
+</figure>
+
+<h3>References</h3>
+<ul>
+<li>
+<p>"Total Variation Blind Deconvolution: The Devil is in the Details", D. Perrone and P. Favaro, CVPR, 2014 (<a href="http://www.cvg.unibe.ch/dperrone/tvdb/">project website</a>)</p>
+</li>
+<li>
+<p>T. Chan and C. K. Wong. "Total Variation Blind Deconvolution." Transactions on Image Processing, 1998.</p>
+</li>
+</ul>      </section>
+      <footer>
+        <hr class="dashed">
+<a href="mailto:karasev00@gmail.com"><img src="website-images/emaillogo.png" class="logoimage" alt="email"/></a>
+<a href="https://github.com/vasiliykarasev"><img src="website-images/githublogo.png" class="logoimage" alt="github"/></a>
+
+
+website rebuilt on 
+Sun Jun 28 02:59:12 PDT 2015
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-60494691-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+  </body>
+</html>
