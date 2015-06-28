@@ -5,10 +5,13 @@ define colorecho
 	@echo $1
 	@tput sgr0
 endef
-
 OK_STRING=$(OK_COLOR)[OK]$(NO_COLOR)
 ERROR_STRING=$(ERROR_COLOR)[ERRORS]$(NO_COLOR)
 WARN_STRING=$(WARN_COLOR)[WARNINGS]$(NO_COLOR)
+# -----------------------------------------------------------------------------
+# set build variables here:
+HAVE_SSE ?= 1
+HAVE_FFTW ?= 1
 #------------------------------------------------------------------------------
 SRCDIR=$(shell pwd)
 #------------------------------------------------------------------------------
@@ -25,18 +28,30 @@ MKDIR_P = mkdir -p
 #------------------------------------------------------------------------------
 INCLUDE_DIR += -I. -I$(SRC)/ -I/usr/local/include/ -I/usr/include
 LIBS += -L/usr/local/lib -lm -L/usr/lib/x86_64-linux-gnu/
-LIBS += -ljpeg -lpng -lgflags -lfftw3f -lpthread
+LIBS += -ljpeg -lpng -lgflags -lpthread
+ifeq ($(HAVE_FFTW), 1)
+LIBS += -lfftw3f
+endif
 LIBBCV = -L$(LIB)/ -lbcv
 
 FFMPEG_LIBS=    -lavdevice -lavformat -lavfilter \
 				-lavcodec -lswresample -lswscale -lavutil
 #------------------------------------------------------------------------------
-CXXFLAGS = -std=gnu++11 -fPIC -Wall -pedantic 
-CXXFLAGS += -march=native -mtune=native -msse3 -DHAVE_SSE -DNDEBUG
+CXXFLAGS = -std=gnu++11 -fPIC -Wall -pedantic -DNDEBUG
+ifeq ($(HAVE_SSE), 1)
+CXXFLAGS += -march=native -mtune=native -msse3 -DHAVE_SSE
+endif
+
 BCVLIB_OBJS = rw_jpeg.o rw_png.o bcv_io.o bcv_diff_ops.o bcv_utils.o \
-bcv_kmeans.o Slic.o tvsegment.o tvdn.o tvdeblur.o bcv_imgproc.o
-TESTS = test_slic test_tvsegment test_tvdn test_imgproc test_tvdeblur
-SANITY_TESTS = test_io test_fftw
+bcv_kmeans.o Slic.o tvsegment.o tvdn.o bcv_imgproc.o
+TESTS = test_slic test_tvsegment test_tvdn test_imgproc
+SANITY_TESTS = test_io
+
+ifeq ($(HAVE_FFTW), 1)
+BCVLIB_OBJS += tvdeblur.o
+TESTS += test_tvdeblur
+SANITY_TESTS += test_fftw
+endif
 
 VPATH = $(SRC):$(EXAMPLES)
 TEST_OBJS = $(addsuffix .o, $(TESTS) )
