@@ -48,13 +48,22 @@
       </header>
       <section>
 <h3>Installation</h3>
-<p>The project is built with a single makefile, and there are rather few dependencies.
+<p>The project is built with a single makefile, and there are relatively few dependencies.
 To allow reading/writing images, make sure you have <code>libjpeg</code> and <code>libpng</code> installed.
-Also install <a href="gflags">gflags</a>, as all examples heavily rely on it.</p>
-<p>You can build the library and the examples simply with:</p>
+On linuxmint/ubuntu systems, this is easy to do:</p>
+<pre><code>$ sudo apt-get install libpng-dev libjpeg-dev
+</code></pre>
+<p>Optionally you can install <a href="http://www.fftw.org/">FFTW3</a>, which is necessary for some components.
+This can be done with:</p>
+<pre><code>$ sudo apt-get install libfftw3-dev
+</code></pre>
+<p>To be able to run examples, you need <a href="http://gflags.github.io/gflags/">gflags</a>.</p>
+<p><br></p>
+<p>You can build the library and the examples with:</p>
 <pre><code>$ make all
 </code></pre>
-<p>You may wish to symlink the library to <code>/usr/local/lib</code>, in which case you should
+<p>(To build the library alone -- <code>make bcv</code>).
+You may wish to symlink the library to <code>/usr/local/lib</code>, in which case you should
 probably run</p>
 <pre><code>$ sudo make install  
 $ sudo ld config
@@ -69,7 +78,12 @@ To do so, open your <code>.bashrc</code> file with your favorite text editor:</p
 <p>And reload it:</p>
 <pre><code>$ source ~/.bashrc
 </code></pre>
-<p>At this point you can navigate to <code>bin/</code> and try the examples.</p>      </section>
+<p>At this point you can navigate to <code>bin/</code> and try the examples.</p>
+<p><br></p>
+<p>The <code>Makefile</code> may need to be modified to point to appropriate include directories.
+In addition it contains flags <code>HAVE_SSE</code> and <code>HAVE_FFTW</code>. The former is used
+to enable SSE optimizations. The latter makes it possible to compile the library
+without features that require the FFT.</p>      </section>
       <footer>
         <hr class="dashed">
 <a href="mailto:karasev00@gmail.com"><img src="website-images/emaillogo.png" class="logoimage" alt="email"/></a>
@@ -77,7 +91,7 @@ To do so, open your <code>.bashrc</code> file with your favorite text editor:</p
 
 
 website rebuilt on 
-Sun Jun 28 02:59:12 PDT 2015
+Fri Jul 10 15:57:59 PDT 2015
       </footer>
     </div>
     <script src="javascripts/scale.fix.js"></script>
