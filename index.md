@@ -4,7 +4,10 @@ title: bcv
 ---
 ### What this is
 
-bcv is a small library of algorithms that i (personally) find interesting. 
+bcv is a small C++ library of algorithms that i (personally) find interesting. 
+
+* [Changelog](changelog.html)
+* [Installation tips](installation.html)
 
 ### What it does?
 
@@ -23,8 +26,7 @@ bcv is a small library of algorithms that i (personally) find interesting.
 * [ZIP](https://github.com/vasiliykarasev/bcv/zipball/master)
 * [TAR](https://github.com/vasiliykarasev/bcv/tarball/master)
 * [View on *GitHub*](https://github.com/vasiliykarasev/bcv)
-* [Installation tips](installation.html)
-* [Changelog](changelog.html)
+
 
 ### Contact
 

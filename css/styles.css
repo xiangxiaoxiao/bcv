@@ -172,3 +172,21 @@ figcaption {
 .logoimage:hover,.logoimage:active {
   opacity: 1.0;
 }
+
+div#hmenu { 
+   margin: 0; 
+   padding: 0 0 0 0; 
+   width: 100%; 
+} 
+
+div#hmenu ul { 
+   list-style: none; 
+   font-size: 15px;
+} 
+
+div#hmenu ul li { 
+   margin: 0;
+   padding-left: 0.2em; 
+   padding: 0; 
+   display: inline; 
+} 
