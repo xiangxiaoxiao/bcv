@@ -58,22 +58,22 @@ Output:
 
 Below are results for segmentation with varying number of clusters, and varying TV regularization penalty.
 <figure>
-<a href="{{site.url}}/website-images/tvsegment_variedK.jpg">
-<img src="{{site.url}}/website-images/tvsegment_variedK.jpg" alt="tv segmentation, varied number of clusters"/>
+<a href="{{site.baseurl}}/website-images/tvsegment_variedK.jpg">
+<img src="{{site.baseurl}}/website-images/tvsegment_variedK.jpg" alt="tv segmentation, varied number of clusters"/>
 </a>
 <figcaption>Segmentation with varying number of clusters. Left: input image. Right: segmentation with $K = 5, 10, 20$</figcaption>
 </figure>
 
 <figure>
-<a href="{{site.url}}/website-images/tvsegment_variedlambda.jpg">
-<img src="{{site.url}}/website-images/tvsegment_variedlambda.jpg" alt="tv segmentation, varied TV regularization"/>
+<a href="{{site.baseurl}}/website-images/tvsegment_variedlambda.jpg">
+<img src="{{site.baseurl}}/website-images/tvsegment_variedlambda.jpg" alt="tv segmentation, varied TV regularization"/>
 </a>
 <figcaption>Segmentation with 3 clusters and varying TV regularization.. Left: input image. Right: segmentation with $\lambda = 0.01, 0.1, 0.5$. Note that as $\lambda \rightarrow 0$, segmentation becomes essentially k-means clustering on the image intensities.</figcaption>
 </figure>
 
 <figure>
-<a href="{{site.url}}/website-images/tvsegment_ex3.jpg">
-<img src="{{site.url}}/website-images/tvsegment_ex3.jpg" alt="tv segmentation"/>
+<a href="{{site.baseurl}}/website-images/tvsegment_ex3.jpg">
+<img src="{{site.baseurl}}/website-images/tvsegment_ex3.jpg" alt="tv segmentation"/>
 </a>
 <figcaption>Top: original image. Bottom: segmentation with $K=5$</figcaption>
 </figure>
