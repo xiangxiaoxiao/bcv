@@ -45,7 +45,9 @@ void gamma_adjustment(vector<float>& x, float gamma=0.0f);
 void modulate(vector<float>& x, float val_mul, float sat_mul, float hue_rot);
 
 //! the same effect as used in vintageJS (https://github.com/rendro/vintageJS)
-void vintage(vector<float>& x);
+//! if maxval (largest value in the image) is not specified,
+//! it is calculated from the image.
+void vintage(vector<float>& x, float maxval=0);
 
 //! 
 void tint(vector<float>& x, const vector<float>& rgb, float percent);

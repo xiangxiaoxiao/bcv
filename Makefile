@@ -12,6 +12,7 @@ WARN_STRING=$(WARN_COLOR)[WARNINGS]$(NO_COLOR)
 # set build variables here:
 HAVE_SSE ?= 1
 HAVE_FFTW ?= 1
+HAVE_FFMPEG ?= 1
 #------------------------------------------------------------------------------
 SRCDIR=$(shell pwd)
 #------------------------------------------------------------------------------
@@ -29,28 +30,35 @@ MKDIR_P = mkdir -p
 INCLUDE_DIR += -I. -I$(SRC)/ -I/usr/local/include/ -I/usr/include
 LIBS += -L/usr/local/lib -lm -L/usr/lib/x86_64-linux-gnu/
 LIBS += -ljpeg -lpng -lgflags -lpthread
-ifeq ($(HAVE_FFTW), 1)
-LIBS += -lfftw3f
-endif
+
 LIBBCV = -L$(LIB)/ -lbcv
 
-FFMPEG_LIBS=    -lavdevice -lavformat -lavfilter \
-				-lavcodec -lswresample -lswscale -lavutil
+
 #------------------------------------------------------------------------------
-CXXFLAGS = -std=gnu++11 -fPIC -Wall -pedantic -DNDEBUG
+CXXFLAGS = -std=gnu++11 -fPIC -Wall -pedantic -O3 # -DNDEBUG
 ifeq ($(HAVE_SSE), 1)
 CXXFLAGS += -march=native -mtune=native -msse3 -DHAVE_SSE
 endif
 
 BCVLIB_OBJS = rw_jpeg.o rw_png.o bcv_io.o bcv_diff_ops.o bcv_utils.o \
 bcv_kmeans.o Slic.o tvsegment.o tvdn.o bcv_imgproc.o
+
 TESTS = test_slic test_tvsegment test_tvdn test_imgproc
 SANITY_TESTS = test_io
 
+# Additional features if you have FFMPEG/AVCONV
+ifeq ($(HAVE_FFMPEG), 1)
+BCVLIB_OBJS += video_writer.o video_reader.o
+SANITY_TESTS += test_ffmpeg
+LIBS += -lavdevice -lavformat -lavfilter \
+		-lavcodec -lswresample -lswscale -lavutil
+endif
+# Additional features if you have FFTW
 ifeq ($(HAVE_FFTW), 1)
 BCVLIB_OBJS += tvdeblur.o
 TESTS += test_tvdeblur
 SANITY_TESTS += test_fftw
+LIBS += -lfftw3f
 endif
 
 VPATH = $(SRC):$(EXAMPLES)
@@ -74,11 +82,11 @@ tests: $(TESTS)
 
 sanity_tests: $(SANITY_TESTS)
 
-#test_ffmpeg: test_ffmpeg.o
-#	$(CXX) $(CXXFLAGS) $(INCLUDE_DIR) $(OBJ)/$@.o $(LIBS) $(LIBBCV) $(FFMPEG_LIBS) -o $(BIN)/$@ 
+#test_ffmpeg: test_ffmpeg.o video_writer.o video_reader.o
+#	$(CXX) $(CXXFLAGS) $(INCLUDE_DIR) $(OBJ)/$@.o $(OBJ)/video_writer.o $(OBJ)/video_reader.o $(LIBS) $(LIBBCV) $(FFMPEG_LIBS) -o $(BIN)/$@ 
 #	$(call colorecho, "CREATED "$(BIN)/$@" SUCCESSFULLY!", 2)
 
-libbcv: $(BCVLIB_OBJS)
+libbcv: directories $(BCVLIB_OBJS)
 	$(CXX) $(LF) $(CXXFLAGS) $(INCLUDE_DIR) \
 	$(addprefix $(OBJ)/, $(BCVLIB_OBJS) ) $(LIBS) -o $(LIB)/$@$(EX) 
 	$(call colorecho, "BUILT LIBRARY! CREATED lib/$@$(EX) SUCCESSFULLY!", 2)
@@ -104,8 +112,9 @@ $(SANITY_TESTS): $(SANITY_TEST_OBJS) libbcv
 #------------------------------------------------------------------------------
 clean:
 	rm -f $(OBJ)/*.o
+	rm -rf $(OBJ)
 	rm -f $(LIB)/libbcv$(EX)
-
+    
 install:
 	ln -s $(CURDIR)/$(LIB)/libbcv$(EX) /usr/local/lib/libbcv$(EX) 
 	$(call colorecho, "INSTALLED /usr/local/lib/libbcv$(EX) !", 2)

@@ -126,9 +126,9 @@ void modulate(vector<float>& x, float val_mul, float sat_mul, float hue_rot) {
     }
 }
 
-void vintage(vector<float>& x) { 
+void vintage(vector<float>& x, float maxval) { 
     assert( (x.size() % 3) == 0 && "image has 3 channels." );
-    float maxval = *max_element(x.begin(), x.end());
+    if (maxval==0) { maxval = *max_element(x.begin(), x.end()); }
     if (maxval==0) { return; }
     transform(x.begin(), x.end(), x.begin(), bind1st(multiplies<float>(), 1.0f/maxval));
     float r,g,b;
