@@ -5,8 +5,8 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>bcv: basic computer vision</title>
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <link rel="stylesheet" href="{{site.url}}/css/styles.css">
+    <link rel="stylesheet" href="{{site.url}}/css/pygment_trac.css">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -35,11 +35,11 @@
 	</script>
 	<script type="text/x-mathjax-config">
 	  MathJax.Hub.Config({tex2jax: {
-	  	inlineMath: [['$','$'], ['\\(','\\)']]}});
+	  	inlineMath: [['$','$'] ],
+		displayMath: [ ['$$','$$'] ] }});
 	</script>
 
 
-  </head>
   <body>
     <div class="wrapper">
       <header>
@@ -47,35 +47,22 @@
         <hr class="dashed">
       </header>
       <section>
-<h3>What this is</h3>
-<p>bcv is a small library of algorithms that i (personally) find interesting. </p>
-<h3>What it does?</h3>
-<ul>
-<li><a href="test_slic.html">SLIC superpixels</a></li>
-<li><a href="test_tvsegment.html">TV-regularized segmentation</a></li>
-<li><a href="test_tvdn.html">TV denoising</a></li>
-</ul>
-<h3>Download</h3>
-<ul>
-<li><a href="https://github.com/vasiliykarasev/bcv/zipball/master">ZIP</a></li>
-<li><a href="https://github.com/vasiliykarasev/bcv/tarball/master">TAR</a></li>
-<li><a href="https://github.com/vasiliykarasev/bcv">View on <em>GitHub</em></a></li>
-<li><a href="installation.html">Installation tips</a></li>
-<li><a href="changelog.html">Changelog</a></li>
-</ul>
-<h3>Contact</h3>
-<p><a href="mailto:karasev00@gmail.com">email me</a></p>      </section>
-      <footer>
-        <hr class="dashed">
-<a href="mailto:karasev00@gmail.com"><img src="website-images/emaillogo.png" class="logoimage" alt="email"/></a>
-<a href="https://github.com/vasiliykarasev"><img src="website-images/githublogo.png" class="logoimage" alt="github"/></a>
+
+<!-- <h1>{{ page.title }}</h1> -->
+
+{{ content }}
 
 
-website rebuilt on 
-Fri Jul 10 15:57:59 PDT 2015
-      </footer>
-    </div>
-    <script src="javascripts/scale.fix.js"></script>
+</section>
+<footer>
+<hr class="dashed">
+<a href="mailto:karasev00@gmail.com"><img src="{{site.url}}/website-images/emaillogo.png" class="logoimage" alt="email"/></a>
+<a href="https://github.com/vasiliykarasev"><img src="{{site.url}}/website-images/githublogo.png" class="logoimage" alt="github"/></a>
+
+Rebuilt on {{ site.time | date: "%B %d %Y, %H:%M:%S PST" }} using Jekyll. 
+</footer>
+</div>
+<script src="{{site.url}}/javascripts/scale.fix.js"></script>
               <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));

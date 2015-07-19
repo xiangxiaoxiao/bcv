@@ -1,4 +1,9 @@
-## SLIC superpixels (test_slic)
+---
+layout: default
+title: SLIC superpixels
+tags: example
+---
+## {{page.title}} (test_slic)
 
 This example uses SLIC to produce a segmentation, and writes a few results. Here is a sample call:
 
@@ -13,7 +18,7 @@ and the output:
 This generates a segmentation with 3000 superpixels, a geometric weight of 5, in 5 iterations. It performs optimization at two levels, and downsamples each level by a factor of 2.
 
 <figure>
-<a href="website-images/slic_example.jpg"><img src="website-images/slic_example.jpg" alt="slic example"/></a>
+<a href="{{site.url}}/website-images/slic_example.jpg"><img src="{{site.url}}/website-images/slic_example.jpg" alt="slic example"/></a>
 <figcaption>
 Left: input image. Middle: superpixel boundaries. Right: visualization using the mean color for each region. 
 </figcaption>

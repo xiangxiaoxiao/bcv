@@ -1,4 +1,9 @@
-## TV denoising (test_tvdn)
+---
+layout: default
+title: TV denoising
+tags: example
+---
+## {{page.title}} (test_tvdn)
 
 This example is about total-variation denoising. Given a noisy image $u$, denoising is formulated as a convex optimization problem:
 
@@ -7,13 +12,17 @@ $$
 $$
 
 where $x$ is the "clean"/denoised image. The first term ensures that the resulting image is "close" to the original $u$. The second term -- total variation -- is weighted by a penalty $\lambda$ and is used to penalize pixelwise image differences. It can be written as (anisotropic version):
+
 $$
 TV(x) = \sum_{i,j} |x_{i+1,j}-x_{i,j}|+|x_{i,j+1}-x_{i,j}|
 $$
+
 or as (isotropic version):
+
 $$
 TV(x) = \sum_{i,j} \sqrt{ |x_{i+1,j}-x_{i,j}|^2+|x_{i,j+1}-x_{i,j}|^2 }
 $$
+
 This optimization problem is convex. Here it is solved using first-order primal-dual algorithm (see references). The problem is fairly parallelizable and some parallelization is done using SSE instructions.
 
 ### Examples
@@ -31,8 +40,8 @@ Output:
 
 Below are results for segmentation with varying $\lambda$ (TV regularization penalty).
 <figure>
-<a href="website-images/tvdn_variedlambda.jpg">
-<img src="website-images/tvdn_variedlambda.jpg" alt="tv denoising"/>
+<a href="{{site.url}}/website-images/tvdn_variedlambda.jpg">
+<img src="{{site.url}}/website-images/tvdn_variedlambda.jpg" alt="tv denoising"/>
 </a>
 <figcaption>Left to right: input image, $\lambda=5$, $\lambda=20$ </figcaption>
 </figure>
@@ -40,8 +49,8 @@ Below are results for segmentation with varying $\lambda$ (TV regularization pen
 The next example shows the effect of isotropic and anisotropic penalties (with a very large $\lambda$):
 
 <figure>
-<a href="website-images/tvdn_isoaniso.jpg">
-<img src="website-images/tvdn_isoaniso.jpg" alt="tv denoising"/>
+<a href="{{site.url}}/website-images/tvdn_isoaniso.jpg">
+<img src="{{site.url}}/website-images/tvdn_isoaniso.jpg" alt="tv denoising"/>
 </a>
 <figcaption>Left: anisotropic. Right: isotropic</figcaption>
 </figure>
@@ -50,8 +59,8 @@ Anisotropic is "grid-aligned", while isotropic is not. For this reason, it typic
 The images above are not really noisy; the algorithm was applied only to make them more stylish. Below is an actual denoising example (of huge robots).
 
 <figure>
-<a href="website-images/tvdn_noisy.jpg">
-<img src="website-images/tvdn_noisy.jpg" alt="tv denoising"/>
+<a href="{{site.url}}/website-images/tvdn_noisy.jpg">
+<img src="{{site.url}}/website-images/tvdn_noisy.jpg" alt="tv denoising"/>
 </a>
 <figcaption>Left: original. Right: denoised with $\lambda=4$</figcaption>
 </figure>

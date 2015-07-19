@@ -1,3 +1,7 @@
+---
+layout: default
+title: Installation
+---
 ### Installation
 
 The project is built with a single makefile, and there are relatively few dependencies.
