@@ -12,7 +12,7 @@ bcv is a small library of algorithms that i (personally) find interesting.
   {% for page in site.pages %}
   {% if page.tags contains 'example' %}
     <li>
-      <a href="{{ page.siteurl }}">{{ page.title }}</a>
+      <a href="{{site.url}}{{ page.siteurl }}">{{ page.title }}</a>
     </li>
   {% endif %}
   {% endfor %}
