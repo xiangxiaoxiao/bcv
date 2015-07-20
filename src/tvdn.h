@@ -1,3 +1,4 @@
+//! @file: tvdn.h
 //! TV denoising:
 //!   x^* = \arg\min_x 0.5*\| x- u \|_2^2 + \lambda TV(x)
 //!
@@ -28,7 +29,7 @@ using namespace std;
 #define BCV_SIGN(x) ( ((x)>0) ? +1 : -1)
 #endif
 
-//! denoising parameters
+//! TV denoising parameters
 class tvdn_params {
 public:
     float lambda = 1.0f; //! weight of TV penalty
@@ -47,6 +48,7 @@ public:
     void print();
 };
 
+//! TV denoising solver
 class tvdn {
 public:
     tvdn(const vector<float>& img, const tvdn_params& p);

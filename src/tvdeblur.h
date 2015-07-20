@@ -1,3 +1,4 @@
+//! @file tvdeblur.h
 //! TV deblurring
 //! This code is adapted from MATLAB code accompanying a paper:
 //!   "Total Variation Blind Deconvolution: The Devil is in the Details", 
@@ -28,7 +29,7 @@ using namespace std;
 #define BCV_SIGN(x) ( ((x)>0) ? +1 : -1)
 #endif
 
-//! deblurring parameters
+//! TV deblurring parameters
 class tvdeblur_params {
 public:
     enum { KERNEL_INIT_FLAT, KERNEL_INIT_DELTA };
@@ -64,6 +65,7 @@ public:
     void print();
 };
 
+//! TV deblurring solver
 class tvdeblur {
     enum truncation_type { TRUNCATION_FULL, TRUNCATION_SAME, TRUNCATION_VALID };
 public:

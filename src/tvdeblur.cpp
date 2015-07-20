@@ -1,8 +1,3 @@
-// @file tvdeblur.cpp
-//! This code is adapted from MATLAB code accompanying a paper:
-//!   "Total Variation Blind Deconvolution: The Devil is in the Details", 
-//!    D. Perrone and P. Favaro, CVPR, 2014. 
-
 #include "tvdeblur.h"
 namespace bcv {
 

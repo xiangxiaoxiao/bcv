@@ -114,8 +114,15 @@ clean:
 	rm -f $(OBJ)/*.o
 	rm -rf $(OBJ)
 	rm -f $(LIB)/libbcv$(EX)
+	rm -rf doc/
     
 install:
 	ln -s $(CURDIR)/$(LIB)/libbcv$(EX) /usr/local/lib/libbcv$(EX) 
 	$(call colorecho, "INSTALLED /usr/local/lib/libbcv$(EX) !", 2)
 	$(call colorecho, "you may wish to run 'sudo ldconfig' now", 1)
+
+documentation:
+	rm -rf doc/
+	doxygen doxycfg
+	touch doc
+	$(call colorecho, "Created documentation wow!!", 2)

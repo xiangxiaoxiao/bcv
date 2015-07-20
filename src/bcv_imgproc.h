@@ -1,3 +1,4 @@
+//! @file bcv_imgproc.h
 #ifndef BCV_IMGPROC_H_
 #define BCV_IMGPROC_H_
 #include <cstdlib>
@@ -12,10 +13,10 @@
 namespace bcv {
 using namespace std;
 
-//! resize image (isotropically)
+//! \brief resize image
 vector<float> imresize(const vector<float>& in, int in_rows, int in_cols, int out_rows, int out_cols);
 
-//! returns a grayscale image
+//! \brief returns a grayscale image
 vector<float> rgb2gray(const vector<float>& x);
 
 void rgb2yiq(vector<float>& x);
@@ -25,31 +26,37 @@ void yiq2rgb(vector<float>& x);
 void rgb2hsv(vector<float>& x);
 void hsv2rgb(vector<float>& x);
 
+//! \brief Sepia effect to an RGB image.
 //! Range of the image does not matter; default args assume [0,1]
 void sepia(vector<float>& x, float i_new=51.0f/256.0f, float q_new=0.0f);
 
+//! \brief Histogram equalization
 //! Image must be in {0,255}
 void hist_eq(vector<uchar>& x, int chan);
 
+//! \brief Vignetting effect to an image
 //! Range of the image does not matter.
 void vignette(vector<float>& x, int rows, int cols, int chan, float sigma=0.01); 
 
+//! \brief Gamma adjustment effect.
 //! Range of the image does not matter. When gamma=0, does 'autogamma':
 //! chooses gamma=-log(mu)/log(2) , where mu is the average intensity.
 void gamma_adjustment(vector<float>& x, float gamma=0.0f);
 
-//! val_mul: value/brightness multiplier
-//! sat_mul: saturation multiplier
-//! hue_rot: hue rotation in degrees
-//! image is assumed to be in HSV / HSL space
+//! \brief Modulation effect.
+//! \param val_mul: value/brightness multiplier
+//! \param sat_mul: saturation multiplier
+//! \param hue_rot: hue rotation in degrees
+//! \param x: image is assumed to be in HSV / HSL space
 void modulate(vector<float>& x, float val_mul, float sat_mul, float hue_rot);
 
-//! the same effect as used in vintageJS (https://github.com/rendro/vintageJS)
+//! \brief Applies "vintage" effect to an image.
+//! the same effect as used in vintageJS (https://github.com/rendro/vintageJS).
 //! if maxval (largest value in the image) is not specified,
 //! it is calculated from the image.
 void vintage(vector<float>& x, float maxval=0);
 
-//! 
+//! \brief Tint effect 
 void tint(vector<float>& x, const vector<float>& rgb, float percent);
 
 void inline rgb2yiq_one(float* x) {

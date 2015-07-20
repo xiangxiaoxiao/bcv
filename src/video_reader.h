@@ -26,6 +26,7 @@ extern "C" {
 #include <libavutil/error.h>
 }
 
+//! Video reader
 class video_reader {  
 public:
     video_reader() = delete; // no default constructor

@@ -4,4 +4,4 @@
 obj/*
 bin/*
 lib/*.so
-
+doc/

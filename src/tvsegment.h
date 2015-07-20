@@ -1,3 +1,8 @@
+//! @file tvsegment.h
+//! Multilabel TV segmentation, solved using the primal-dual method:
+//! A. Chambolle and T.Pock's "A first-order primal-dual algorithm              
+//! for convex problems with applications to imaging"                           
+//! Journal of Mathematical Imaging and Vision 40.1 (2011)  
 #ifndef BCV_TVSEGMENT_H_
 #define BCV_TVSEGMENT_H_
 
@@ -24,6 +29,7 @@ struct tvsegment_params {
     int isotropic; //! perform isotropic TV regularization or not
 };
 
+//! multilabel TV segmentation solver
 class tvsegment {
     public:
         //! main function that performs optimization
