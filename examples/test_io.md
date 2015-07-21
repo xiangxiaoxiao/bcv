@@ -12,23 +12,23 @@ This example demonstrates how to read/write images and videos using BCV.
 Reading images is easy:
 
 {% highlight cpp %}
-const char* fname = "../images/arches.jpg";
 int rows, cols, chan;
-vector<uchar> img = bcv::bcv_imread<uchar>(in_fname, &rows, &cols, &chan);
+vector<uchar> img = bcv::bcv_imread<uchar>("my-image.jpg", &rows, &cols, &chan);
 {% endhighlight %}
-
 
 If you want a grayscale image (independent of whether the actual image on disk is grayscale or not), 
 you can omit the `chan` argument:
 
 {% highlight cpp %}
-vector<uchar> img = bcv::bcv_imread<uchar>(in_fname, &rows, &cols);
+vector<uchar> img = bcv::bcv_imread<uchar>("my-image.jpg", &rows, &cols);
 {% endhighlight %}
 
-Writing the images is done similarly:
+BCV only supports `jpg` and `png`, and requires that the extension matches the codec (i.e. it will not allow you to load "my-image.sup" even if the image is actually a jpeg). An image is just a STL vector. Data order is similar to opencv -- channels are fastest changing, followed by columns, and lastly rows.
+
+Writing the images is quite similar:
 
 {% highlight cpp %}
-bcv::bcv_imwrite<uchar>(out_fname, img, rows, cols, chan);
+bcv::bcv_imwrite<uchar>("my-future-image.jpg", img, rows, cols, chan);
 {% endhighlight %}
 
 If the image is grayscale, you can again omit the `chan` argument.
