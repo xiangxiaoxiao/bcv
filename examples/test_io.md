@@ -11,18 +11,25 @@ This example demonstrates how to read/write images and videos using BCV.
 
 Reading images is easy:
 
-    const char* fname = "../images/arches.jpg";
-    int rows, cols, chan;
-    vector<uchar> img = bcv::bcv_imread<uchar>(in_fname, &rows, &cols, &chan);
+{% highlight cpp %}
+const char* fname = "../images/arches.jpg";
+int rows, cols, chan;
+vector<uchar> img = bcv::bcv_imread<uchar>(in_fname, &rows, &cols, &chan);
+{% endhighlight %}
+
 
 If you want a grayscale image (independent of whether the actual image on disk is grayscale or not), 
 you can omit the `chan` argument:
 
-    vector<uchar> img = bcv::bcv_imread<uchar>(in_fname, &rows, &cols);
+{% highlight cpp %}
+vector<uchar> img = bcv::bcv_imread<uchar>(in_fname, &rows, &cols);
+{% endhighlight %}
 
 Writing the images is done similarly:
 
-    bcv::bcv_imwrite<uchar>(out_fname, img, rows, cols, chan);
+{% highlight cpp %}
+bcv::bcv_imwrite<uchar>(out_fname, img, rows, cols, chan);
+{% endhighlight %}
 
 If the image is grayscale, you can again omit the `chan` argument.
 
@@ -31,31 +38,37 @@ If the image is grayscale, you can again omit the `chan` argument.
 Videos are somewhat more complex, as will be shown below.
 You can open videos as follows:
 
-    video_reader f;
-    f.open("my-video.mp4");
-    if (!f.is_opened()) { /* handle error somehow */ }
-    cols = f.get_width();
-    rows = f.get_height()
-    vector<uchar> img = f.get_frame<uchar>();
-    ...
-    f.close();
+{% highlight cpp %}
+video_reader f;
+f.open("my-video.mp4");
+if (!f.is_opened()) { /* handle error somehow */ }
+cols = f.get_width();
+rows = f.get_height();
+vector<uchar> img = f.get_frame<uchar>();
+...
+f.close();
+{% endhighlight %}
 
 You could combine the call to `open` with the constructor and the call to `close`
 with the destructor, and just do:
 
-    video_reader f("my-video.mp4");
-    if (!f.is_opened()) { /* handle error somehow */ }
-    cols = f.get_width();
-    rows = f.get_height()
-    vector<uchar> img = f.get_frame<uchar>();
+{% highlight cpp %}
+video_reader f("my-video.mp4");
+if (!f.is_opened()) { /* handle error somehow */ }
+cols = f.get_width();
+rows = f.get_height()
+vector<uchar> img = f.get_frame<uchar>();
+{% endhighlight %}
 
 In both cases, you *must* check that the file has been successfully open. If it
 was opened, you can get frames in linear order using `get_frame`. Once there 
 are no frames left in the video, `get_frame` returns an empty vector. Thus, you
 can check for end-of-video using
 
-    vector<uchar> img = f.get_frame<uchar>();
-    if (img.empty()) { /* reached end of video */ }
+{% highlight cpp %}
+vector<uchar> img = f.get_frame<uchar>();
+if (img.empty()) { /* reached end of video */ }
+{% endhighlight %}
 
 Note that frames in the video are accessed in linear order, and cannot be "rewinded".
 
@@ -64,13 +77,15 @@ Note that frames in the video are accessed in linear order, and cannot be "rewin
     
 The process of writing videos is similar in some aspects.
 
-    video_writer f("hello-my-future-video.mp4", width, height);
-    if (!f.is_opened()) { /* handle basic sanity errors */ }
-    f.set_fps(10);
-    f.set_bitrate(10000000);
-    if (!f.prepare()) { /* handle errors */ }
-    while (1) { f.add_frame( img ); }
-    f.close()
+{% highlight cpp %}
+video_writer f("hello-my-future-video.mp4", width, height);
+if (!f.is_opened()) { /* handle basic sanity errors */ }
+f.set_fps(10);
+f.set_bitrate(10000000);
+if (!f.prepare()) { /* handle errors */ }
+while (1) { f.add_frame( img ); }
+f.close()
+{% endhighlight %}
 
 Opening and closing an *output* video is similar to opening/closing
 an *input* video. the `close` call can be combined with the destructor and the `open`
