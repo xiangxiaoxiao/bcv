@@ -4,6 +4,11 @@
 #include "bcv_io.h"
 #include <gflags/gflags.h>
 
+#ifdef HAVE_FFMPEG
+#include "video_reader.h"
+#include "video_writer.h"
+#endif
+
 using namespace std;
 using bcv::uchar;
 
@@ -21,24 +26,69 @@ DEFINE_bool(vintage, false, "apply vintage effect?.\n");
 DEFINE_string(modulate, "1,1,0", "modulate by (val-mul, sat-mul, hue-rot).\n");
 DEFINE_string(tint, "0,0,0,0", "tint color (rgba).\n");
 
+void do_imgproc(vector<float>& img, int rows, int cols, int chan);
 int main(int argc, char** argv) { 
-    gflags::SetUsageMessage("image processing example");
+    gflags::SetUsageMessage("image/video processing example");
     gflags::ParseCommandLineFlags(&argc, &argv, false);
-    double t1, t2;
+
     int rows, cols, chan;
 
-    vector<float> img = bcv::bcv_imread<float>(
-    							FLAGS_input.c_str(), &rows, &cols, &chan);
+    if ( (bcv::is_image_file(FLAGS_input.c_str())) && 
+         (bcv::is_image_file(FLAGS_output.c_str())) ) {
+        vector<float> img = bcv::bcv_imread<float>(
+        							FLAGS_input.c_str(), &rows, &cols, &chan);
+        do_imgproc(img, rows, cols, chan);
+        bcv::bcv_imwrite<float>(FLAGS_output.c_str(), img, rows, cols, chan);
+    } else if ( (bcv::is_video_file(FLAGS_input.c_str())) &&
+                (bcv::is_video_file(FLAGS_output.c_str())) ) {
+        #ifndef HAVE_FFMPEG
+        printf("Trying to read a video file, but no FFMPEG support.\n");
+        printf("Cannot do anything.\n");            
+        return 0;
+        #else
 
+        video_reader vin( FLAGS_input.c_str() );
+        if (!vin.is_opened()) { return -1; }
+
+        int width  = vin.get_width();
+        int height = vin.get_height();
+        rows = height;
+        cols = width;
+        chan = 3;
+        video_writer vout( FLAGS_output.c_str(), width, height);
+        if (!vout.is_opened()) { return -1; }
+        vout.set_fps( vin.get_fps() );
+        if (!vout.prepare()) { return -1; }
+
+        while (true) {
+            vector<float> img = vin.get_frame<float>();
+            if (img.empty()) { break; }
+            do_imgproc(img, rows, cols, chan);
+
+            vout.add_frame(img);
+        }
+        vin.close(); // alternatively, let destructor do the same 
+        vout.close(); // alternatively, let destructor do the same
+        #endif
+    } else {
+        printf("Check input/output consistency: \nin: %s\nout: %s\n", 
+                        FLAGS_input.c_str(), FLAGS_output.c_str() );
+    } 
+
+    return 0;
+}
+
+void do_imgproc(vector<float>& img, int rows, int cols, int chan) {
+    double t1, t2;
     if (FLAGS_rgb2hsv) { // rgb to hsv and back
         t1 = bcv::now_ms();
         bcv::rgb2hsv(img);
-	    t2 = bcv::now_ms();
+        t2 = bcv::now_ms();
         printf("rgb2hsv took: %f ms on %dx%d image\n", t2-t1, rows, cols);
     
         t1 = bcv::now_ms();
         bcv::hsv2rgb(img);
-	    t2 = bcv::now_ms();
+        t2 = bcv::now_ms();
         printf("hsv2rgb took: %f ms on %dx%d image\n", t2-t1, rows, cols);
     }
 
@@ -47,7 +97,7 @@ int main(int argc, char** argv) {
         I.assign(img.begin(), img.end());
         t1 = bcv::now_ms();
         bcv::hist_eq(I, chan);  
-	    t2 = bcv::now_ms();
+        t2 = bcv::now_ms();
         printf("histogram equalization took: %f ms on %dx%d image\n", t2-t1, rows, cols);
         img.assign(I.begin(), I.end());
     }
@@ -99,8 +149,6 @@ int main(int argc, char** argv) {
         }
     }
 
-
-
     if (FLAGS_gamma >= 0) { // gamma adjustment
         t1 = bcv::now_ms();
         bcv::gamma_adjustment(img, FLAGS_gamma);
@@ -123,10 +171,7 @@ int main(int argc, char** argv) {
     if (FLAGS_vignette) { 
         t1 = bcv::now_ms();
         bcv::vignette(img, rows, cols, chan, FLAGS_vignette_sigma);
-	    t2 = bcv::now_ms();
+        t2 = bcv::now_ms();
         printf("vignette took: %f ms on %dx%d image\n", t2-t1, rows, cols);
-    }
-
-    bcv::bcv_imwrite<float>(FLAGS_output.c_str(), img, rows, cols, chan);
-    return 0;
+    }    
 }

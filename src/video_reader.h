@@ -29,19 +29,30 @@ extern "C" {
 //! Video reader
 class video_reader {  
 public:
-    video_reader() = delete; // no default constructor
     video_reader(const video_reader& other) = delete; // no copy constructor!
     video_reader(const video_reader&& other) = delete; // no move constructor!
     video_reader& operator=(const video_reader& other) = delete; // no copy assignment op!
     video_reader& operator=(const video_reader&& other) = delete; // no move assignment op!
 
-    //! constructor: input filename
-    video_reader(const char* filename);
+    //! constructor: input filename. 
+    //! If no filename is specified, you have to later open the file manually,
+    //! otherwise it is opened when the object is created. 
+    video_reader(const char* filename=NULL);
     //! nontrivial destructor
-    ~video_reader();
+    ~video_reader() { close(); };
 
-    //! get a frame from the video sequence.
-    //! returns empty vector on failure (or e.g. when video is finished)    
+    //! Returns true on success, false otherwise. Returns false and does nothing
+    //! if the video is already opened.
+    bool open(const char* filename);
+
+    // Returns true if the video has successfully been opened, false otherwise.
+    bool is_opened() const { return reader_success; };
+    
+    //! Closes a video if one is open, otherwise does nothing.
+    void close();
+
+    //! Get a frame from the video sequence.
+    //! Returns empty vector on failure (or e.g. when video is finished)    
     template <typename T> std::vector<T> get_frame() { 
         alloc_frame_internal();
         uint8_t* data = get_frame_internal();
@@ -54,8 +65,11 @@ public:
         return out; 
     };
 
+    //! Returns image width
     int get_width() const { return width; };
+    //! Returns image height
     int get_height() const { return height; };
+    //! Returns video FPS
     float get_fps() const;
 private:
     bool reader_success = false; 

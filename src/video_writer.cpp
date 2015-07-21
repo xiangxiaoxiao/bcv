@@ -1,16 +1,33 @@
 #include "video_writer.h"
 
 video_writer::video_writer(const char* fname, int width, int height) {
-    this->filename = std::string(fname);
-    this->width = width;
-    this->height = height;
     av_log_set_level(AV_LOG_WARNING);
     av_register_all();
+    this->width = width;
+    this->height = height;
+    if (fname != NULL) { video_opened = open(fname); }
 }
 
-video_writer::~video_writer() {
-    if (!video_finished) { finish(); }
-    if (codec_context) { av_free(codec_context); }
+bool video_writer::open(const char* fname) {
+    video_opened = false;
+    filename = std::string(fname);
+    // Perform various checks to make sure that the file can be written to.
+    // is the format sane?
+    AVOutputFormat* fmt = av_guess_format(NULL, filename.c_str(), NULL);
+    if (!fmt) { printf("Could not guess format.\n"); return false; }
+    // find codec?
+    AVCodec* videoCodec = avcodec_find_encoder(fmt->video_codec);
+    if (!videoCodec) { 
+        printf("Could not find codec\n");
+        return false;
+    }
+    // is this supported?
+    if ( avformat_query_codec(fmt, fmt->video_codec, FF_COMPLIANCE_NORMAL) != 1) {
+        printf("the selected codec is not supported in this container.");
+        return false;
+    }
+    video_opened = true;
+    return video_opened;
 }
 
 void video_writer::set_fps(float fps) {
@@ -23,49 +40,44 @@ void video_writer::set_bitrate(int br) {
     else { printf("Cannot change video bitrate.\n"); }
 }
 
-void video_writer::prepare() {
-    assert( !video_prepared && "video not prepared." );
-    video_prepared = true;
+void video_writer::set_imsize(int width, int height) {
+    if (!video_prepared) { this->width = width; this->height = height; }
+    else { printf("Cannot change video size.\n"); }
+}
 
-    if (!format_) {
-        fmt = av_guess_format(NULL, filename.c_str(), NULL);
-        if (!fmt) { printf("Could not guess format."); return; }
-    }
+bool video_writer::prepare() {
+    if (!video_opened) { return false; } // will fail
+    if (video_prepared) { return true; } // already finished
+
+    fmt = av_guess_format(NULL, filename.c_str(), NULL);
+    AVCodecID codecId = fmt->video_codec; //AV_CODEC_ID_MPEG4;
+    AVCodec* videoCodec = avcodec_find_encoder(codecId);
     if (!format_context) {
         avformat_alloc_output_context2(&format_context, fmt, NULL, filename.c_str());
     }
     snprintf(format_context->filename, sizeof(format_context->filename), 
-                                                    "%s", filename.c_str());
-
-    AVCodecID codecId = fmt->video_codec; //AV_CODEC_ID_MPEG4;
-    AVCodec* videoCodec = avcodec_find_encoder(codecId);
-    if (!videoCodec) { 
-        printf("Could not find codec");
-        free_format_context();
-        return;
-    }
-  
-    if ( avformat_query_codec(fmt, codecId, FF_COMPLIANCE_NORMAL) != 1) {
-        printf("the selected codec is not supported in this container.");
-        free_format_context();
-        return;
-    }
-      
+                                                    "%s", filename.c_str());      
     if (!stream_) {
         stream_ = avformat_new_stream(format_context, NULL);
         if (!stream_) {
             printf("Could not create stream.\n");
             free_format_context();
-            return;
+            return false;
         }
     }
 
     // set video parameters
     if (!set_codec_context(stream_->codec, videoCodec)) {
+        printf("Could not set codec context.\n");
         free_format_context();
-        return;
+        return false;
     }
     avformat_write_header(format_context, NULL);
+
+    sws_ctx = sws_getContext(width, height, PIX_FMT_RGB24, width, height,
+                        codec_context->pix_fmt, SWS_BICUBIC, NULL, NULL, NULL);    
+    video_prepared = true;
+    return true;
 }
 
 //! Returns "true" on success
@@ -91,6 +103,8 @@ bool video_writer::set_codec_context(AVCodecContext* codec, AVCodec* videoCodec)
     // apparently deprecated
     codec_context->time_base.num = 1000;
     codec_context->time_base.den = int(fps_ * 1000.0f);
+    codec_context->global_quality = 1; // TODO: lower is better??
+    codec_context->compression_level = 0; // TODO: lower is better??
     stream_->time_base.num = 1000;
     stream_->time_base.den = int(fps_ * 1000.0f);
 
@@ -108,13 +122,13 @@ bool video_writer::set_codec_context(AVCodecContext* codec, AVCodec* videoCodec)
     }
     
     if (avcodec_open2(codec_context, videoCodec, NULL) < 0) {
-        printf("unable to open codec");
+        printf("unable to open codec\n");
         return false;
     }
                   
     if (!(fmt->flags & AVFMT_NOFILE)) {
         if (avio_open(&format_context->pb, filename.c_str(), AVIO_FLAG_WRITE) < 0) {
-          printf("unable to open file");
+          printf("unable to open file\n");
           return false;
         }
     }
@@ -122,10 +136,11 @@ bool video_writer::set_codec_context(AVCodecContext* codec, AVCodec* videoCodec)
 }
 
 
-void video_writer::add_frame_internal(const uint8_t* data) {
+bool video_writer::add_frame_internal(const uint8_t* data) {
     // on first frame, prepare the video by setting up all info and headers
-    if (!video_prepared) { 
-        prepare(); 
+    if (!video_prepared) {
+        prepare();
+        if (!video_prepared) { printf("error writing frame to file"); return false; }
     }
     AVPicture picture;
 
@@ -155,11 +170,7 @@ void video_writer::add_frame_internal(const uint8_t* data) {
 
     av_image_alloc(output->data, output->linesize, width, height, codec_context->pix_fmt, 1);
     
-    SwsContext* convertCtx = sws_getContext(width, height, 
-                                PIX_FMT_RGB24, width, height,
-                                codec_context->pix_fmt, SWS_BICUBIC, NULL, NULL, NULL);
-    
-    sws_scale(convertCtx, picture.data, picture.linesize, 0, height, output->data, output->linesize);
+    sws_scale(sws_ctx, picture.data, picture.linesize, 0, height, output->data, output->linesize);
   
     int ret = 0;
     if ((format_context->oformat->flags & AVFMT_RAWPICTURE) != 0) {
@@ -196,29 +207,49 @@ void video_writer::add_frame_internal(const uint8_t* data) {
     av_free(outBuffer);
     av_free(buffer);
     av_free(output);
-  
-    if (ret) { printf("error writing frame to file"); }
+    
+    if (ret) { printf("error writing frame to file"); return false; }
+    return true;
 }
 
-void video_writer::finish() {
-    assert( !video_finished && "video not finished." );
-    video_finished = true;
+void video_writer::close() {
+    if (!is_opened()) { return; } // cant close an unopened video
 
-    av_write_trailer(format_context);
-    avcodec_close(codec_context);
-    if (!(format_context->oformat->flags & AVFMT_NOFILE)) {
-        avio_close(format_context->pb);
+    if (format_context) {
+        av_write_trailer(format_context);
+        if (!(format_context->oformat->flags & AVFMT_NOFILE)) {
+            avio_close(format_context->pb);
+        }
+        free_format_context();
     }
-    free_format_context();
+    
+    stream_ = NULL;
+    // TODO: crashes if i try this
+    // if (stream_) { av_freep(stream_); stream_ = NULL; }
+
+    if (sws_ctx) { sws_freeContext(sws_ctx); sws_ctx = NULL; }
+
+    if (codec_context) { 
+        avcodec_close(codec_context); 
+        codec_context = NULL; 
+    }
+    // set things to NULL...
+    fmt = NULL;
+    stream_ = NULL;
+    filename = "";
+    width = 0;
+    height = 0;
+    fps_ = 0;
+    codec_ = 0;
 }
 
 void video_writer::free_format_context() {
     if (format_context) { // clear format context
-        for (int i = 0; i < format_context->nb_streams; ++i) {
-            av_freep(&format_context->streams[i]);
-        }
-        av_free(format_context);
+        avformat_free_context(format_context);
+        //for (int i = 0; i < format_context->nb_streams; ++i) {
+        //    av_freep(&format_context->streams[i]);
+        //}
+        //av_free(format_context);
         format_context = NULL;
     }
-    stream_ = NULL;
 }

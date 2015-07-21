@@ -3,11 +3,17 @@
 video_reader::video_reader(const char* fname) {
     av_log_set_level(AV_LOG_WARNING);    
     av_register_all();
-    filename = std::string(fname);
 
-    reader_success = prepare();
+    if (fname != NULL) { open(fname); }
 }
 
+bool video_reader::open(const char* fname) {
+    if (reader_success) { return false; } // file is already open, do nothing
+
+    filename = std::string(fname);
+    reader_success = prepare();
+    return reader_success;
+}
 //! Returns true on success.
 //! This function reads the video codecs and must be executed prior to getting
 //! any frames from the video.
@@ -122,10 +128,24 @@ float video_reader::get_fps() const {
         return av_q2d(pFormatCtx->streams[video_stream]->r_frame_rate);
     }
 }
-video_reader::~video_reader() {
+
+void video_reader::close() { 
+    if (!reader_success) { return; } // no video open..
+    
+    // Close the scaling context:
+    if (sws_ctx) { sws_freeContext(sws_ctx); sws_ctx = NULL; }
     // Close the codecs
-    avcodec_close(pCodecCtx);
-    avcodec_close(pCodecCtx2);
+    if (pCodecCtx) { avcodec_close(pCodecCtx); pCodecCtx = NULL; }
+    if (pCodecCtx2) { avcodec_close(pCodecCtx2); pCodecCtx2 = NULL; }
     // Close the video file
-    avformat_close_input(&pFormatCtx);
+    if (pFormatCtx) { avformat_close_input(&pFormatCtx); pFormatCtx = NULL; }
+    // apparently this does not need to be closed
+    pCodec = NULL;
+    // set fields to default values.
+    filename = "";
+    width = 0;
+    height = 0;
+    chan = 0;
+    video_stream = -1;
+    reader_success = false;
 }

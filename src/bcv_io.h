@@ -99,5 +99,10 @@ inline int file_exists(const char* fname) {
 //! Returns a vector of lines from file.
 vector<string> read_file_lines(const char* fname);
 
+//! \brief Returns true if extension matches a typical image extension 
+bool is_image_file(const char* fname);
+//! \brief Returns true if extension matches a typical video extension 
+bool is_video_file(const char* fname);
+
 } // namespace bcv
 #endif // BCV_IO_H_
