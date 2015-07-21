@@ -48,7 +48,6 @@ TESTS = test_slic test_tvsegment test_tvdn test_imgproc test_io
 ifeq ($(HAVE_FFMPEG), 1)
 CXXFLAGS += -DHAVE_FFMPEG
 BCVLIB_OBJS += video_writer.o video_reader.o
-TESTS += test_ffmpeg
 LIBS += -lavdevice -lavformat -lavfilter \
 		-lavcodec -lswresample -lswscale -lavutil
 endif
