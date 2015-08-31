@@ -36,7 +36,8 @@ LIBS += -ljpeg -lpng -lgflags -lpthread
 LIBBCV = -L$(LIB)/ -lbcv
 
 #------------------------------------------------------------------------------
-CXXFLAGS = -std=gnu++11 -fPIC -Wall -pedantic -O3 # -DNDEBUG
+CXXFLAGS = -std=gnu++11 -fPIC -Wall -pedantic -O3
+CXXFLAGS += -DNDEBUG
 ifeq ($(HAVE_SSE), 1)
 CXXFLAGS += -march=native -mtune=native -msse3 -DHAVE_SSE
 endif

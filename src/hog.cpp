@@ -83,8 +83,6 @@ void Hog::init(const vector<float>& gradnorm_vec, const vector<float>& theta_vec
 
     int id0, id1, id2;
     double theta, theta_id, gradnorm, w;
-    vector<size_t> block_ids; block_ids.reserve(4);
-    vector<intpair> block_rcs; block_rcs.reserve(4);
 
     // multiply gradient orientations to be in range [0, num_orientations]
     float theta_scale = num_orientations / M_PI;
@@ -95,9 +93,19 @@ void Hog::init(const vector<float>& gradnorm_vec, const vector<float>& theta_vec
     float* gradnorm_sq_cum = new float[rows*cols];
     memset(gradnorm_sq_cum, 0, sizeof(float)*rows*cols);
 
-    for (int i = 0; i < rows*cols; ++i) {
-        for (int ch = 0; ch < chan; ++ch) {
-            gradnorm_sq_cum[i] += gradnorm_vec[chan*i+ch]*gradnorm_vec[chan*i+ch];
+    if (chan == 1) {
+        memcpy(gradnorm_sq_cum, &gradnorm_vec[0], sizeof(float)*rows*cols);
+    } else if (chan == 3) {
+        for (int i = 0; i < rows*cols; ++i) {
+            gradnorm_sq_cum[i] = gradnorm_vec[chan*i+0]*gradnorm_vec[chan*i+0] +
+                                 gradnorm_vec[chan*i+1]*gradnorm_vec[chan*i+1] +
+                                 gradnorm_vec[chan*i+2]*gradnorm_vec[chan*i+2];
+        }        
+    } else {
+        for (int i = 0; i < rows*cols; ++i) {
+            for (int ch = 0; ch < chan; ++ch) {
+                gradnorm_sq_cum[i] += gradnorm_vec[chan*i+ch]*gradnorm_vec[chan*i+ch];
+            }
         }
     }
     // init lookup table for exp
@@ -113,38 +121,45 @@ void Hog::init(const vector<float>& gradnorm_vec, const vector<float>& theta_vec
     vector<vector<size_t>> block_ccc(cell_cols);
     for (int cr = 0; cr < cell_rows; ++cr) {
         if (cr > 0) { block_rrr[cr].push_back(cr-1); }
+        else { block_rrr[cr].push_back(0); }
         if (cr < (cell_rows-1)) { block_rrr[cr].push_back(cr); }
-    }
+        else { block_rrr[cr].push_back(cr-1); }
+    } 
     for (int cc = 0; cc < cell_cols; ++cc) {
         if (cc > 0) { block_ccc[cc].push_back(cc-1); }
+        else { block_ccc[cc].push_back(0); }
         if (cc < (cell_cols-1)) { block_ccc[cc].push_back(cc); }
+        else { block_ccc[cc].push_back(cc-1); }
     }
-
-    //double t1 = now_ms();
+    int blk_center_r[2]; int blk_center_c[2];
+    int dy_idx[2]; int dx[2];
     for (int cr = 0; cr < cell_rows; ++cr) { 
         for (int cc = 0; cc < cell_cols; ++cc) {     
-            // find normalizing factor in the blocks
-            for (auto& byy : block_rrr[cr]) { 
-                for (auto& bxx : block_ccc[cc]) {
-                    double val = 0;
-                    int blk_center_r = (byy+1)*cell_size;
-                    int blk_center_c = (bxx+1)*cell_size;
+            float vals[4] = {0,0,0,0};
+            blk_center_r[0] = (block_rrr[cr][0]+1)*cell_size; 
+            blk_center_r[1] = (block_rrr[cr][1]+1)*cell_size;
+            blk_center_c[0] = (block_ccc[cc][0]+1)*cell_size; 
+            blk_center_c[1] = (block_ccc[cc][1]+1)*cell_size;
 
-                    for (int r = cr*cell_size; r < min(rows, (cr+1)*cell_size); ++r) { 
-                        int dy = abs(r-blk_center_r);
-                        for (int c = cc*cell_size; c < min(cols, (cc+1)*cell_size); ++c) { 
-                            int dx = abs(c-blk_center_c);
-                            val += exp_lut_[dy*(cell_size+1)+dx]*gradnorm_sq_cum[r*cols+c];
-                        }
-                    }
-                    descr_blocks[ linear_index(byy,bxx,block_cols) ] += val;
+            for (int r = cr*cell_size; r < min(rows, (cr+1)*cell_size); ++r) { 
+                dy_idx[0] = abs(r-blk_center_r[0])*(cell_size+1);
+                dy_idx[1] = abs(r-blk_center_r[1])*(cell_size+1);
+                for (int c = cc*cell_size; c < min(cols, (cc+1)*cell_size); ++c) { 
+                    dx[0] = abs(c-blk_center_c[0]);
+                    dx[1] = abs(c-blk_center_c[1]);
+                    float z = gradnorm_sq_cum[r*cols+c];
+                    vals[0] += exp_lut_[ dy_idx[0]+dx[0] ]*z;
+                    vals[1] += exp_lut_[ dy_idx[0]+dx[1] ]*z;
+                    vals[2] += exp_lut_[ dy_idx[1]+dx[0] ]*z;
+                    vals[3] += exp_lut_[ dy_idx[1]+dx[1] ]*z;
                 }
             }
+            descr_blocks[linear_index(block_rrr[cr][0], block_ccc[cc][0], block_cols)] += vals[0];
+            descr_blocks[linear_index(block_rrr[cr][0], block_ccc[cc][1], block_cols)] += vals[1];
+            descr_blocks[linear_index(block_rrr[cr][1], block_ccc[cc][0], block_cols)] += vals[2];
+            descr_blocks[linear_index(block_rrr[cr][1], block_ccc[cc][1], block_cols)] += vals[3];
         }
-    }            
-    //printf("took(1): %f\n", now_ms()-t1);
-    //t1 = now_ms();
-    
+    }                
     for (int cr = 0; cr < cell_rows; ++cr) { 
         for (int cc = 0; cc < cell_cols; ++cc) {     
             id0 = linear_index(cr, cc, 0, cell_cols, num_orientations);
@@ -155,18 +170,16 @@ void Hog::init(const vector<float>& gradnorm_vec, const vector<float>& theta_vec
                     theta_id = theta_vec[img_id];
                     gradnorm = gradnorm_vec[img_id];
                     id1 = int(theta_id); 
-                    id2 = int(theta_id+1); //int(ceil(theta_id));
+                    id2 = int(theta_id+0.99999f);
                     if (id1==num_orientations) { id1 = 0; }
                     if (id2==num_orientations) { id2 = 0; }
                     w = theta_id-id1;                               
-                    descr_cells[ id0 + id1 ]+= (1-w)*gradnorm;
                     descr_cells[ id0 + id2 ]+= w*gradnorm;
+                    descr_cells[ id0 + id1 ]+= (1-w)*gradnorm;
                 }
             }
         }
     }
-    //printf("took(2): %f\n", now_ms()-t1);    
-
     this->data = vector<float>( 4*cell_rows*cell_cols*num_orientations);
     this->rows = 2*cell_rows;
     this->cols = 2*cell_cols;
@@ -186,21 +199,16 @@ void Hog::init(const vector<float>& gradnorm_vec, const vector<float>& theta_vec
     }
     for (int br = 0; br < block_rows; ++br) {
         for (int bc = 0; bc < block_cols; ++bc) { 
-            id2 = linear_index(br, bc, block_cols);
-            for (int o = 0; o < num_orientations; ++o) {
-                // id0 : index into output, id1: index into cells
-                id0 = linear_index(2*br+0, 2*bc+0, 0, 2*cell_cols, num_orientations);
-                id1 = linear_index(br+0, bc+0, 0, cell_cols, num_orientations);
-                this->data[id0+o] = descr_cells[id1+o]*descr_blocks[id2];
-                id0 = linear_index(2*br+0, 2*bc+1, 0, 2*cell_cols, num_orientations);
-                id1 = linear_index(br+0, bc+1, 0, cell_cols, num_orientations);
-                this->data[id0+o] = descr_cells[id1+o]*descr_blocks[id2];
-                id0 = linear_index(2*br+1, 2*bc+0, 0, 2*cell_cols, num_orientations);
-                id1 = linear_index(br+1, bc+0, 0, cell_cols, num_orientations);
-                this->data[id0+o] = descr_cells[id1+o]*descr_blocks[id2];
-                id0 = linear_index(2*br+1, 2*bc+1, 0, 2*cell_cols, num_orientations);
-                id1 = linear_index(br+1, bc+1, 0, cell_cols, num_orientations);
-                this->data[id0+o] = descr_cells[id1+o]*descr_blocks[id2];
+            float Zinv = descr_blocks[ linear_index(br, bc, block_cols) ];
+            for (int q = 0; q < rcs.size(); ++q) {
+                for (int o = 0; o < num_orientations; ++o) {
+                    // id0 : index into output, id1: index into cells
+                    id0 = linear_index(2*br+rcs[q].first, 
+                            2*bc+rcs[q].second, 0, 2*cell_cols, num_orientations);
+                    id1 = linear_index(br+rcs[q].first, 
+                              bc+rcs[q].second, 0, cell_cols, num_orientations);
+                    this->data[id0+o] = descr_cells[id1+o]*Zinv;
+                }
             }
         }
     }

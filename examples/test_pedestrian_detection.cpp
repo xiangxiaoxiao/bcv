@@ -17,11 +17,14 @@ DEFINE_string(output, "out.jpg","output image");
 DEFINE_int32(cell_size, 8, "HOG cell size");
 DEFINE_int32(num_orientations, 9, "HOG num orientations");
 DEFINE_double(svm_eps, 1e-3, "SVM epsilon");
+DEFINE_double(svm_C, 0, "SVM epsilon");
 DEFINE_string(svm_model_fname, "svm_hog_model.dat", "SVM model data");
 DEFINE_double(svm_detection_threshold, 0.99999, "svm detection threshold");
 DEFINE_double(stride_init, 16, "detection window stride");
 DEFINE_double(scaling, 0.9, "scaling factor for multiscale");
 DEFINE_double(nms_overlap_threshold, 0.8, "nonmaximum suppression overlap threshold");
+DEFINE_bool(run_on_training_set, false, "sanity check");
+DEFINE_bool(gamma_normalization, false, "normalize gamma?");
 
 void compute_descriptors(const vector<string>& files);
 void create_svm_problem(problem& svm_problem, int nexamples, int dim);
@@ -65,16 +68,19 @@ int main(int argc, char** argv) {
     }
     fname_pos = string( base_path + "Test/pos.lst");
     fname_neg = string( base_path + "Test/neg.lst");
-    // TODO: REMOVE
-    fname_pos = string( base_path + "96X160H96/train/pos2/temp.lst"); // for testing
-    //
+    if (FLAGS_run_on_training_set) {
+        fname_pos = string( base_path + "96X160H96/train/pos2/temp.lst");
+    }
 
     pos_files = read_file_lines( fname_pos.c_str() );
     neg_files = read_file_lines( fname_neg.c_str() );
     
-    for (auto& f : pos_files) { f = base_path + "96X160H96/train/pos2/"+ f; }
-    
-    //for (auto& f : pos_files) { f = base_path + f; }
+    // FOR DEBUGGING ONLY
+    if (FLAGS_run_on_training_set) {
+        for (auto& f : pos_files) { f = base_path + "96X160H96/train/pos2/"+ f; }
+    } else {
+        for (auto& f : pos_files) { f = base_path + f; }
+    }
     for (auto& f : neg_files) { f = base_path + f; }
     test_svm_model(pos_files, FLAGS_svm_detection_threshold);
 }
@@ -89,9 +95,6 @@ void test_svm_model(const vector<string>& files, double svm_threshold) {
     vector<float> colour = {255.0f, 0.0f, 0.0f};
     for (size_t i = 0; i < files.size(); ++i) {
         vector<float> img = bcv_imread<float>(files[i].c_str(), &rows, &cols, &chan);
-        //img = imresize(img, rows, cols, rows/2, cols/2);
-        //rows /= 2;
-        //cols /= 2;
         printf("%s %d x %d x %d \n", files[i].c_str(), rows, cols, chan); 
         
         double t1 = now_ms();
@@ -133,6 +136,9 @@ vector<bbox_scored> multiscale_detect_in_image(const model* svm_model, double sv
     for (int s = 0; s < nscales; ++s) {
         printf("at scale: %d/%d\n", s, nscales); 
         vector<float> s_img = imresize(img, rows, cols, s_rows[s], s_cols[s]);
+        // gamma normalization:
+        if (FLAGS_gamma_normalization) { gamma_adjustment(s_img, 2.0); }
+
         vector<bbox_scored> dets = detect_in_image(svm_model, svm_threshold, 
                                     s_stride[s], s_img, s_rows[s], s_cols[s]);
         for (auto& det: dets) { 
@@ -165,10 +171,7 @@ vector<bbox_scored> detect_in_image(const model* svm_model, double svm_threshold
         for (int c = 0; c <= (cols-IMG_COLS); c+=stride) {
             // extract subimage
             bbox bb(c, c+IMG_COLS, r, r+IMG_ROWS);
-            
-            //vector<float> subimg = extract_subimage(img, rows, cols, bb);
-            //Hog descr(subimg, IMG_ROWS, IMG_COLS, FLAGS_cell_size, FLAGS_num_orientations);
-            
+                        
             double t1 = now_ms();
             vector<float> subimg_gradnorm = extract_subimage(img_gradnorm, rows, cols, bb);
             vector<float> subimg_gradtheta = extract_subimage(img_gradtheta, rows, cols, bb);
@@ -203,7 +206,7 @@ void train_svm_model(const vector<string>& pos_files,
     parameter svm_param;
     svm_param.solver_type = L2R_LR;
     svm_param.eps = FLAGS_svm_eps;
-    svm_param.C = 1e-5; //FLAGS_svm_c;
+    svm_param.C = 1e-5;
     svm_param.nr_weight = 0;
     svm_param.weight_label = NULL;
     svm_param.weight = NULL;
@@ -249,34 +252,41 @@ void train_svm_model(const vector<string>& pos_files,
 
     // ------------------------------------------------------------------------
     // quick and dirty learn best C in SVM
-    vector<float> svm_C_vec(10);
-    vector<float> svm_C_acc(10);
-    svm_C_vec[0] = 1e-5;
-    for (int i = 1; i < svm_C_vec.size(); ++i) {
-        svm_C_vec[i] = 5*svm_C_vec[i-1];
-    }
-    for (int k = 0; k < svm_C_vec.size(); ++k) {
-        int num_cr_folds = 4;
-        vector<int> pred_labels( nexamples, 0);
-        svm_param.C = svm_C_vec[k];
-        cross_validation(&svm_problem, &svm_param, num_cr_folds, &pred_labels[0]);
-        vector<int> nums = {0, 0};
-        int nerr = 0;
-        for (int i = 0; i < nexamples; ++i) {
-            nums[ pred_labels[i]-1 ]++;
-            nerr += (pred_labels[i] != svm_problem.y[i]);
+    // (never versions of liblinear have a specialized routine for doing this,
+    // but the version in recent linuxmint repositories DOES NOT).
+    if (FLAGS_svm_C == 0) {
+        vector<float> svm_C_vec(10);
+        vector<float> svm_C_acc(10);
+        svm_C_vec[0] = 1e-5;
+        for (int i = 1; i < svm_C_vec.size(); ++i) {
+            svm_C_vec[i] = 5*svm_C_vec[i-1];
         }
-        svm_C_acc[k] = 1.0-double(nerr)/nexamples;
-        printf("C = %f, acc: %f, classified as 1: %d 2: %d\n", 
-            svm_C_vec[k], svm_C_acc[k], nums[0], nums[1]);
+        for (int k = 0; k < svm_C_vec.size(); ++k) {
+            int num_cr_folds = 4;
+            vector<int> pred_labels( nexamples, 0);
+            svm_param.C = svm_C_vec[k];
+            cross_validation(&svm_problem, &svm_param, num_cr_folds, &pred_labels[0]);
+            vector<int> nums = {0, 0};
+            int nerr = 0;
+            for (int i = 0; i < nexamples; ++i) {
+                nums[ pred_labels[i]-1 ]++;
+                nerr += (pred_labels[i] != svm_problem.y[i]);
+            }
+            svm_C_acc[k] = 1.0-double(nerr)/nexamples;
+            printf("C = %f, acc: %f, classified as 1: %d 2: %d\n", 
+                svm_C_vec[k], svm_C_acc[k], nums[0], nums[1]);
+        }
+        // 
+        int best_idx = distance(svm_C_acc.begin(), max_element(svm_C_acc.begin(), svm_C_acc.end() ) );
+
+        // actually train the svm: 
+        svm_param.C = svm_C_vec[best_idx];
+
+        printf("best C: %f best accuracy: %f\n", svm_C_vec[best_idx], svm_C_acc[best_idx]);
+    } else {
+        svm_param.C = FLAGS_svm_C;
     }
-    // 
-    int best_idx = distance(svm_C_acc.begin(), max_element(svm_C_acc.begin(), svm_C_acc.end() ) );
 
-    // actually train the svm: 
-    svm_param.C = svm_C_vec[best_idx];
-
-    printf("best C: %f best accuracy: %f\n", svm_C_vec[best_idx], svm_C_acc[best_idx]);
     printf("checking parameters\n");
     const char *out = check_parameter(&svm_problem, &svm_param);
     if (out!=NULL) { 
@@ -290,6 +300,21 @@ void train_svm_model(const vector<string>& pos_files,
     int ret = save_model(FLAGS_svm_model_fname.c_str(), svm_model);
     if (ret != 0) { printf("Error saving SVM model.\n"); }
 
+    // final cross validation step:
+    if (FLAGS_svm_C > 0) {
+        int num_cr_folds = 4;
+        vector<int> pred_labels( nexamples, 0); 
+        cross_validation(&svm_problem, &svm_param, num_cr_folds, &pred_labels[0]);
+        vector<int> nums = {0, 0};
+        int nerr = 0;
+        for (int i = 0; i < nexamples; ++i) {
+            nums[ pred_labels[i]-1 ]++;
+            nerr += (pred_labels[i] != svm_problem.y[i]);
+        }
+        double svm_C_acc = 1.0-double(nerr)/nexamples;
+        printf("C = %f, acc: %f, classified as 1: %d 2: %d\n", 
+            svm_param.C, svm_C_acc, nums[0], nums[1]);        
+    }
     free_and_destroy_model(&svm_model);
     destroy_svm_problem(svm_problem); 
 }
@@ -333,9 +358,9 @@ void compute_descriptors(const vector<string>& files) {
 
         Hog descr;
         // check if HOG file exists for this file.
-        if ( file_exists(fname_hog.c_str()) ) { 
-            continue;
-        }
+        //if ( file_exists(fname_hog.c_str()) ) { 
+        //    continue;
+        //}
         
         // compute hog descriptor
         vector<float> img = bcv_imread<float>(files[i].c_str(), &rows, &cols, &chan);
@@ -350,14 +375,5 @@ void compute_descriptors(const vector<string>& files) {
         t2 = now_ms();
         descr.write( fname_hog.c_str() );
         printf("computed hog on %dx%d image, took %f ms\n", rows, cols, t2-t1);
-        
-        /*
-        // visualize descriptor
-        vector<float> vis = descr.vis();
-        int rows_vis = descr.vis_rows();
-        int cols_vis = descr.vis_cols();
-        char temp[128]; sprintf(temp, "%04d.png", i);
-        bcv_imwrite(temp, vis, rows_vis, cols_vis, 1, true);
-        */
     }
 }
