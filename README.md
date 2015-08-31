@@ -6,9 +6,10 @@ a small library with computer vision and image processing utilities
 
 ### dependencies:
 
-* Examples require [*gflags*](https://code.google.com/p/gflags/), *libjpeg*, *libpng*
-* TV deblurring code requires [*libfftw3*](http://www.fftw.org/)
+* Image input / output requires *libjpeg*, *libpng*
 * Video input / output requires [*ffmpeg*](https://www.ffmpeg.org/)
+* Examples require [*gflags*](https://code.google.com/p/gflags/)
+* TV deblurring code requires [*libfftw3*](http://www.fftw.org/)
 * Detection/classification requires [*liblinear*](http://www.csie.ntu.edu.tw/~cjlin/liblinear/)
 * Tests require [*gtest*](https://github.com/google/googletest)
 
