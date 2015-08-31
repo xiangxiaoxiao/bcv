@@ -3,6 +3,7 @@
 
 namespace bcv {
 
+//! \brief multichannel finite-difference operation 
 void apply_pixelwise_gradient_op(vector<float>& out, const vector<float>& in, int rows, int cols, int chan) { 
     if (chan==1) { apply_pixelwise_gradient_op(out, in, rows, cols); return; }
     size_t m = in.size();
@@ -21,7 +22,7 @@ void apply_pixelwise_gradient_op(vector<float>& out, const vector<float>& in, in
     apply_dy( &out[m], &in[0], rows, cols, chan);    
     #endif
 }
-
+//! \brief multichannel transpose finite-difference operation 
 void apply_pixelwise_gradient_op_transpose(vector<float>& out, const vector<float>& in, int rows, int cols, int chan) { 
     if (chan==1) { apply_pixelwise_gradient_op_transpose(out, in, rows, cols); return; }
     size_t m = in.size();
@@ -42,6 +43,7 @@ void apply_pixelwise_gradient_op_transpose(vector<float>& out, const vector<floa
     #endif
 }
 
+//! \brief single channel finite-difference operation 
 void apply_pixelwise_gradient_op(vector<float>& out, const vector<float>& in, int rows, int cols) { 
     size_t m = in.size();
     if (out.size() != 2*m) { out = vector<float>(2*m); }
@@ -59,7 +61,7 @@ void apply_pixelwise_gradient_op(vector<float>& out, const vector<float>& in, in
     apply_dy( &out[m], &in[0], rows, cols);        
     #endif
 }
-
+//! \brief single channel transpose finite-difference operation 
 void apply_pixelwise_gradient_op_transpose(vector<float>& out, const vector<float>& in, int rows, int cols) { 
     size_t m = in.size();
     if (out.size() != m/2) { out = vector<float>(m/2); }
@@ -79,6 +81,44 @@ void apply_pixelwise_gradient_op_transpose(vector<float>& out, const vector<floa
     #endif
 }
 
+//! \brief single channel finite-difference operation (float pointer interface) 
+void apply_pixelwise_gradient_op(float* out, const float* in, int rows, int cols) { 
+    size_t m = rows*cols;
+    #if defined(HAVE_MATLAB) & !defined(HAVE_SSE)
+    apply_dx_matlab( &out[0], &in[0], rows, cols);
+    apply_dy_matlab( &out[m], &in[0], rows, cols);
+    #elif defined(HAVE_MATLAB) & defined(HAVE_SSE)
+    apply_dx_matlab_sse( &out[0], &in[0], rows, cols);
+    apply_dy_matlab_sse( &out[m], &in[0], rows, cols);
+    #elif !defined(HAVE_MATLAB) & defined(HAVE_SSE)
+    apply_dx_sse( &out[0], &in[0], rows, cols);
+    apply_dy_sse( &out[m], &in[0], rows, cols);    
+    #else
+    apply_dx( &out[0], &in[0], rows, cols);
+    apply_dy( &out[m], &in[0], rows, cols);        
+    #endif
+}
+
+//! \brief single channel transpose finite-difference operation (float pointer interface) 
+void apply_pixelwise_gradient_op_transpose(float* out, const float* in, int rows, int cols) { 
+    size_t m = rows*cols*2;
+    // order of application matters!!
+    #if defined(HAVE_MATLAB) & !defined(HAVE_SSE)
+    apply_dxt_matlab( &out[0], &in[0], rows, cols);
+    apply_dyt_matlab( &out[0], &in[m/2], rows, cols);
+    #elif defined(HAVE_MATLAB) & defined(HAVE_SSE)
+    apply_dxt_matlab_sse( &out[0], &in[0], rows, cols);
+    apply_dyt_matlab_sse( &out[0], &in[m/2], rows, cols);            
+    #elif !defined(HAVE_MATLAB) & defined(HAVE_SSE)   
+    apply_dxt_sse( &out[0], &in[0], rows, cols);
+    apply_dyt_sse( &out[0], &in[m/2], rows, cols);            
+    #else
+    apply_dxt( &out[0], &in[0], rows, cols);
+    apply_dyt( &out[0], &in[m/2], rows, cols);            
+    #endif
+}
+
+//==============================================================================
 #if !defined(HAVE_MATLAB) && !defined(HAVE_SSE)
 void apply_dy(float* out, const float* in, int rows, int cols, int chan) { 
     for (int r = 0; r < rows-1; ++r) { 

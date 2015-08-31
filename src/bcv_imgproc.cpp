@@ -1,5 +1,27 @@
 #include "bcv_imgproc.h"
 namespace bcv {
+
+//! Returns gradient magnitude and gradient orientation given the image
+void compute_gradient_norm_angle(
+                vector<float>& gradnorm_vec, vector<float>& theta_vec, 
+                const vector<float>& img, int rows, int cols) {
+    theta_vec = vector<float>(img.size());
+    gradnorm_vec = vector<float>(img.size());
+
+    vector<float> img_dx = central_diff_mask(img, rows, cols, 0);
+    vector<float> img_dy = central_diff_mask(img, rows, cols, 1);
+    int chan = img.size()/rows/cols;
+    
+    for (int i = 0; i < rows*cols*chan; ++i) {
+        float dy = 1e-8f + img_dy[i];
+        float dx = 1e-8f + img_dx[i];
+        // TODO: atan2 for stability ??? 
+        theta_vec[i] = min(M_PI, max(0.0, M_PI/2.0f + atan( dy/dx ) )); // in [0,pi]
+        gradnorm_vec[i] = sqrt(dx*dx + dy*dy);
+    } 
+}
+
+//! \brief Bilinearly resize the image
 vector<float> imresize(const vector<float>& in, int in_rows, int in_cols, int out_rows, int out_cols) {
     if ((in_rows == out_rows) && (in_cols == out_cols)) { return in; }
     float scale_y = ((float)out_rows) / ((float)in_rows );
@@ -28,6 +50,65 @@ vector<float> imresize(const vector<float>& in, int in_rows, int in_cols, int ou
     return out;
 }
 
+//! \brief Central difference operator mask, [-1,0,+1], boundary regions set to zero.
+//! \param dir - specifies direction: 0 for horizontal, 1 for vertical.
+vector<float> central_diff_mask(const vector<float>& in, int rows, int cols, bool dir) { 
+    int chan=in.size()/(rows*cols);
+    vector<float> out(in.size());
+    if (dir == 0) { // horizontal direction... 
+        for (int r = 0; r < rows; ++r) {
+            int id = linear_index(r,1,0,cols,chan); 
+            int idr = linear_index(r,2,0,cols,chan);
+            int idl = linear_index(r,0,0,cols,chan);
+            for (int i = 0; i < (cols-2)*chan; ++i) { 
+                out[id] = in[idr]-in[idl];
+                id++; idr++; idl++;
+            }
+        }
+    } else { // vertical direction.
+        for (int r = 1; r < (rows-1); ++r) { 
+            int id = linear_index(r,0,0,cols,chan);
+            int idr = id + cols*chan;
+            int idl = id - cols*chan;
+            for (int i = 0; i < (cols-2)*chan; ++i) {
+                out[id] = in[idr]-in[idl];
+                id++; idr++; idl++;
+            }
+        }
+    }
+    return out;
+}
+
+//! \brief Circularly rotate the image.
+//! Positive shift_x shifts the image LEFT.
+//! Positive shift_y shifts the image UP
+void circshift(vector<float>& in, int rows, int cols, int shift_x, int shift_y) {
+    assert( (in.size() == rows*cols) && "single channel image" );
+    if (shift_x != 0) {
+        vector<float> data = vector<float>(cols);
+        for (int r = 0; r < rows; ++r) {
+            memcpy(&data[0], &in[ linear_index(r,0,cols)], sizeof(float)*cols );
+            for (int c = 0; c < cols; ++c) {
+                int c_in = c+shift_x;
+                c_in = (c_in < 0) ? (c_in+cols) : c_in;
+                c_in = (c_in >= cols) ? (c_in-cols) : c_in;
+                in[linear_index(r,c,cols)]=data[c_in];
+            }
+        }
+    }
+    if (shift_y != 0) {
+        vector<float> data = vector<float>(rows);
+        for (int c = 0; c < cols; ++c) {
+            for (int r = 0; r < rows; ++r) { data[r] = in[linear_index(r,c,cols)]; }
+            for (int r = 0; r < rows; ++r) {
+                int r_in = r+shift_y;
+                r_in = (r_in < 0) ? (r_in+rows) : r_in;
+                r_in = (r_in >= rows) ? (r_in-rows) : r_in;
+                in[linear_index(r,c,cols)]=data[r_in];
+            }
+        }
+    }
+}
 
 void rgb2hsv(vector<float>& x) {
     assert( (x.size() % 3) == 0 && "image has 3 channels." );

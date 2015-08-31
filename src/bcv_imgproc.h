@@ -13,6 +13,22 @@
 namespace bcv {
 using namespace std;
 
+//! \brief Returns gradient magnitude and gradient orientation given the image.
+//! Gradient magnitude is sqrt( dx^2 + dy^2 ).
+//! gradient angle is returned in [0, pi]
+//! \param gradnorm_vec, theta_vec - are outputs
+//! \param img , rows, cols - are inputs
+void compute_gradient_norm_angle(
+                vector<float>& gradnorm_vec, vector<float>& theta_vec, 
+                const vector<float>& img, int rows, int cols);
+
+//! \brief central difference operator, boundary regions set to zero.                        
+//! \param dir - specifies direction: 0 for horizontal, 1 for vertical.           
+vector<float> central_diff_mask(const vector<float>& in, int rows, int cols, bool dir); 
+
+//! \brief circularly shift image in place
+void circshift(vector<float>& in, int rows, int cols, int shift_x, int shift_y);
+
 //! \brief resize image
 vector<float> imresize(const vector<float>& in, int in_rows, int in_cols, int out_rows, int out_cols);
 

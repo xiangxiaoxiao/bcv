@@ -7,7 +7,7 @@
 #include <cstring>
 #include <string>
 #include <set>
-#include "assert.h"
+#include <cassert>
 
 namespace bcv {
 using namespace std;
@@ -17,6 +17,9 @@ using namespace std;
 typedef unsigned char uchar;
 #endif
 
+typedef pair<int,int> intpair;
+
+//#define BCV_SIGN(x) ( ((x)>0) ? +1 : -1)
 #define BCV_SIGN(x) (((x)>0) - ((x)<0))
 
 // image element access operations
@@ -41,6 +44,21 @@ int inline getcol(int i, int cols, int chan) {
 
 //
 vector<int> choose_random_subset(int k, int n);
+
+template <typename T>
+void keep_indices_if(vector<T>& x, const vector<bool>& pred) {
+    assert(x.size() == pred.size());
+    int j = 0;
+    for (int i = 0; i < pred.size(); ++i) { if (pred[i]) { x[j]=x[i]; j++; } }
+    x.erase(x.begin()+j, x.end());
+}
+template <typename T>
+void erase_indices_if(vector<T>& x, const vector<bool>& pred) {
+    assert(x.size() == pred.size());
+    int j = 0;
+    for (int i = 0; i < pred.size(); ++i) { if (!pred[i]) { x[j]=x[i]; j++; } }
+    x.erase(x.begin()+j, x.end());
+}
 
 unsigned long now_us();
 double now_ms();

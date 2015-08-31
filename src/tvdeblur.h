@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <fftw3.h>
 #include "bcv_utils.h"
+#include "bcv_imgutils.h"
 #include "bcv_diff_ops.h"
 #include "bcv_io.h" // temporary
 #include "bcv_imgproc.h" // for imresize
@@ -24,10 +25,6 @@
 
 namespace bcv {
 using namespace std;
-
-#ifndef BCV_SIGN
-#define BCV_SIGN(x) ( ((x)>0) ? +1 : -1)
-#endif
 
 //! TV deblurring parameters
 class tvdeblur_params {
@@ -48,11 +45,6 @@ public:
     int pyramid_numlevels = 1;
     float pyramid_imsize_scaling = 1; // how much to resize the image at each time? (<1)
     float pyramid_lambda_scaling = 1; // how much to increase lambda at each time (>1)
-    // backtracking line search:
-    bool use_bls = false;
-    float bls_beta = 0.5f;
-    float bls_alpha = 0.001f; 
-    int bls_max_iters = 10;
     // other parameters
     int rows = 0;
     int cols = 0;
@@ -85,6 +77,7 @@ public:
     tvdeblur& operator=(const tvdeblur&& other) = delete; // no move assignment op!
 
     vector<float> result();
+    vector<float> get_kernel();
     //
     void solve_inner(float lambda);
     // for a given kernel, solve the non-blind deconvolution problem
@@ -104,10 +97,6 @@ public:
     float calc_func_value(const vector<float>& u, 
                           const vector<float>& kernel, 
                           const vector<float>& img_og, float lambda);
-
-    // backtracking line search over image and kernel
-    float bls_u(const vector<float>& gu, float lambda, float bls_step);
-    float bls_k(const vector<float>& gk, float lambda, float bls_step);
 
     void project_kernel_onto_feasible_set(vector<float>& k);
 
@@ -137,10 +126,7 @@ public:
     // data sizes:
     int rows, cols, chan;
     int rows_ker, cols_ker;
-    int rows_padded, cols_padded;    
-private:
-    vector<float> stack_channels(const vector<float>& in, int chan);
-    vector<float> interleave_channels(const vector<float>& in, int chan);
+    int rows_padded, cols_padded;
 };
 
 } // namespace bcv

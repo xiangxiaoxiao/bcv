@@ -23,11 +23,19 @@ typedef unsigned char uchar;
 
 //! Writes 'jpg' or 'png' image.
 template <class T> void bcv_imwrite(const char* fname, 
-                const vector<T>& x, int rows, int cols, int chan=1) {
+                const vector<T>& x, int rows, int cols, int chan=1, bool normalize=false) {
     vector<uchar> img = vector<uchar>(x.size());
-    for (int i = 0; i < x.size(); ++i) {
-        T val = min( max( (T)0, x[i] ), (T)255 );
-        img[i] = (uchar)val;
+    if (normalize) { 
+        double ratio = 255.0/(*max_element(x.begin(), x.end() )); 
+        for (int i = 0; i < x.size(); ++i) {
+            T val = min( max( T(0), T(x[i]*ratio) ), T(255) );
+            img[i] = (uchar)val;
+        }
+    } else {
+        for (int i = 0; i < x.size(); ++i) {
+            T val = min( max( T(0), T(x[i]) ), T(255) );
+            img[i] = (uchar)val;
+        }
     }
 
     if (isJPG(fname)) {
@@ -94,6 +102,12 @@ inline int file_exists(const char* fname) {
   return (stat(fname, &buffer) == 0); 
 }
 
+//! Changes the end of s into 'ext'
+inline void set_extension(string& s, const char* ext) { 
+    int n = strlen(ext);
+    if (s.size() < n) { return; }
+    for (int i=s.size()-n,j=0; i<s.size(); ++i, ++j) { s[i]=ext[j]; }
+}
 
 
 //! Returns a vector of lines from file.

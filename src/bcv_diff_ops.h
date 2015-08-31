@@ -38,10 +38,18 @@ using std::vector;
 //!         out = [D_x( img ); D_y( img )];
 void apply_pixelwise_gradient_op(vector<float>& out, const vector<float>& in, int rows, int cols, int chan);
 void apply_pixelwise_gradient_op(vector<float>& out, const vector<float>& in, int rows, int cols);
+void apply_pixelwise_gradient_op(vector<float>& out, const vector<float>& in, int rows, int cols);
+
 //! Applies the transpose of the pixelwise gradient operator:
 //!         out = D_x^T( edg ) + D_y^T( edg )
 void apply_pixelwise_gradient_op_transpose(vector<float>& out, const vector<float>& in, int rows, int cols, int chan); 
 void apply_pixelwise_gradient_op_transpose(vector<float>& out, const vector<float>& in, int rows, int cols); 
+
+//! Note that if you use the interface with "float*" you are responsible for ensuring that arrays of
+//! correct dimensions are passed into the interface
+void apply_pixelwise_gradient_op(float* out, const float* in, int rows, int cols);
+void apply_pixelwise_gradient_op_transpose(float* out, const float* in, int rows, int cols); 
+
 
 #if !defined(HAVE_MATLAB) & !defined(HAVE_SSE)
 void apply_dx(float* out, const float* in, int rows, int cols, int chan);

@@ -77,16 +77,24 @@ int read_png_file(const char *file_name, unsigned char** img, int* width, int* h
     bit_depth = png_get_bit_depth(png_ptr, info_ptr);
     // TODO(vasiliy): ENSURE WE UNDERSTAND WHAT HAPPENS IF DATA IS NOT CHARS...
 
-    /* GET IMAGE DATA*/
-    *img = (unsigned char*)malloc(sizeof(unsigned char) * (*width) * (*height) * (*channels));
-    row_pointers = png_get_rows(png_ptr, info_ptr);
-
     int w = *width;
     int h = *height;
+    int chan_in = *channels;
     int chan = *channels;
+    if (chan == 4) { // dont worry about RGBA crap
+        *channels = 3;
+        chan = 3;
+    }
+    /* GET IMAGE DATA*/
+    *img = (unsigned char*)malloc(sizeof(unsigned char)*w*h*chan);
+    row_pointers = png_get_rows(png_ptr, info_ptr);
+
     for (int i = 0; i < h; ++i) {
-        for (int j = 0; j < w*chan; ++j)
-            img[0][w*chan*i + j] = row_pointers[i][j];
+        for (int j = 0; j < w; ++j) {
+            for (int k = 0; k < chan; ++k) {
+                img[0][w*chan*i + j*chan + k] = row_pointers[i][j*chan_in+k];
+            }
+        }
     }
     png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
     /* close the file */

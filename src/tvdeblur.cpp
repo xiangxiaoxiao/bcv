@@ -6,16 +6,7 @@ void tvdeblur_params::print() {
     printf("---------------------\n");
     printf("lambda = %f (min=%f)\n", lambda, min_lambda );
     printf("annealing rate = %f\n", annealing_rate );
-    if (use_bls) {
-    printf("backtracking line search parameters:\n");
-    printf("beta: %f\n", bls_beta);
-    printf("alpha: %f\n", bls_alpha);
-    printf("max-iters: %d\n", bls_max_iters);
-    printf("grad steps are UNUSED\n");
-    } else {
-    printf("backtracking linear search parameters are UNUSED.\n");
     printf("grad step: img = %f, ker = %f\n", grad_descent_step_u, grad_descent_step_k );
-    }
     printf("kernel size: %d\n", ker_size);
     printf("max iterations: %d, max anneal rounds: %d\n", max_inner_iterations, max_anneal_rounds );
     printf("dfx tolerance: %f\n", dfx_tolerance);
@@ -51,8 +42,11 @@ tvdeblur::tvdeblur(const vector<float>& img, const tvdeblur_params& p) {
 }
 
 
-vector<float> tvdeblur::pad_image(const vector<float>& in, int rows_in, int cols_in, int rows_out, int cols_out) {
+vector<float> tvdeblur::pad_image(const vector<float>& in, 
+                        int rows_in, int cols_in, int rows_out, int cols_out) {
     vector<float> out = vector<float>(rows_out*cols_out*chan, 1.0f);
+    return out;
+
     int n_in = rows_in*cols_in;
     int n_out = rows_out*cols_out;
     int r_offset = (rows_out-rows_in)/2;
@@ -61,10 +55,13 @@ vector<float> tvdeblur::pad_image(const vector<float>& in, int rows_in, int cols
     assert( (r_offset >= 0 && c_offset >= 0) && "sane offsets" );
     assert( (rows_in*cols_in*chan == in.size()) && "sane input size" );
     for (int ch = 0; ch < chan; ++ch) {
+        float* out_ch = &out[ch*n_out];
+        const float* in_ch = &in[ch*n_in];
+        
         for (int r = 0; r < rows_in; ++r) { 
             for (int c = 0; c < cols_in; ++c) {
-                out[ linear_index(r+r_offset, c+c_offset, cols_out) + ch*n_out] = 
-                in[ linear_index(r, c, cols_in) + ch*n_in]; 
+                out_ch[ linear_index(r+r_offset, c+c_offset, cols_out) ] = 
+                in_ch[ linear_index(r, c, cols_in) ]; 
             }
         }
         for (int r = 0; r < rows_out; ++r) {
@@ -75,15 +72,16 @@ vector<float> tvdeblur::pad_image(const vector<float>& in, int rows_in, int cols
                 }                
                 int r_ = min(max(0, r-r_offset), rows_in-1);
                 int c_ = min(max(0, c-c_offset), cols_in-1);
-                out[ linear_index(r, c, cols_out) + ch*n_out] = 
-                    in[ linear_index( r_, c_, cols_in) + ch*n_in];
+                out_ch[ linear_index(r, c, cols_out) ] = 
+                    in_ch[ linear_index( r_, c_, cols_in) ];
             }
         }
     }
     return out;
 }
 
-vector<float> tvdeblur::unpad_image(const vector<float>& in, int rows_in, int cols_in, int rows_out, int cols_out) {
+vector<float> tvdeblur::unpad_image(const vector<float>& in, 
+                        int rows_in, int cols_in, int rows_out, int cols_out) {
     vector<float> out = vector<float>(rows_out*cols_out*chan, 1.0f);
     int n_in = rows_in*cols_in;
     int n_out = rows_out*cols_out;
@@ -105,7 +103,9 @@ vector<float> tvdeblur::unpad_image(const vector<float>& in, int rows_in, int co
 
 void tvdeblur::solve() {
     chan = params->chan;
+    
     for (int s = 0; s < scales_data.size(); ++s) {
+        printf("scale = %d\n", s);
         // get sizes:
         rows = scales_data[s].rows;
         cols = scales_data[s].cols;
@@ -114,6 +114,9 @@ void tvdeblur::solve() {
         rows_padded = scales_data[s].rows_padded;
         cols_padded = scales_data[s].cols_padded;
         float tv_penalty = scales_data[s].lambda;
+
+        u = stack_channels(img_blur_original, chan); 
+        u = pad_image(u, rows, cols, rows_padded, cols_padded);
 
         // resize image to appropriate size, to serve as "noisy image"...
         vector<float> img = imresize(img_blur_original, params->rows, params->cols, rows, cols);
@@ -149,8 +152,6 @@ void tvdeblur::solve() {
     }
 }
 
-void tvdeblur::debug() { }
-
 void tvdeblur::solve_inner(float tv_penalty) {
     float scale, bls_step_u, bls_step_k; scale = bls_step_u = bls_step_k = 1.0f;
     double t1, elapsed;
@@ -166,14 +167,10 @@ void tvdeblur::solve_inner(float tv_penalty) {
             // step is: max|u| / max| \nabla u |
             t1 = now_ms();
             vector<float> gu = calc_grad_img(u, kernel, img_og, tv_penalty);
-            if (params->use_bls) {
-                bls_step_u = bls_u(gu, tv_penalty, bls_step_u);
-                scale = bls_step_u;
-            } else {
-                scale = params->grad_descent_step_u * max(1e-7f, 
+            scale = params->grad_descent_step_u * max(1e-7f, 
                         abs(*max_element(u.begin(), u.end())) / 
                         max(1e-10f, abs(*max_element(gu.begin(), gu.end() )) ) );
-            }
+
             for (int i = 0; i < u.size(); ++i ) {
                 u[i] = u[i] - scale*gu[i];
             }
@@ -181,14 +178,10 @@ void tvdeblur::solve_inner(float tv_penalty) {
             // step is: max|k| / max| \nabla k |
             ////t_ = now_ms();
             vector<float> gk = calc_grad_kernel(u, kernel, img_og);
-            if (params->use_bls) {
-                bls_step_k = bls_k(gk, tv_penalty, bls_step_k);
-                scale = bls_step_k;
-            } else {
-                scale = params->grad_descent_step_k * max(1e-7f, 
-                        abs(*max_element(kernel.begin(), kernel.end())) / 
-                        max(1e-10f, abs(*max_element(gk.begin(), gk.end() )) ) );
-            }
+            scale = params->grad_descent_step_k * max(1e-7f, 
+                    abs(*max_element(kernel.begin(), kernel.end())) / 
+                    max(1e-10f, abs(*max_element(gk.begin(), gk.end() )) ) );
+
             for (int i = 0; i < kernel.size(); ++i ) {
                 kernel[i] = kernel[i] - scale*gk[i];
             }
@@ -237,16 +230,11 @@ void tvdeblur::solve_inner(float tv_penalty) {
 
 void tvdeblur::solve_nonblind(const vector<float>& k, float tv_penalty, int num_iters) {
     float scale = 1.0f;
-    float bls_step = 1.0f;
     for (int iter = 0; iter < num_iters; ++iter) {
         vector<float> gu = calc_grad_img(u, k, img_og, tv_penalty);
-        if (true) { //params->use_bls) {
-            scale = bls_u(gu, tv_penalty, bls_step);
-        } else {
-            scale = max(1e-3f, 
+        scale = max(1e-3f, 
                     abs(*max_element(u.begin(), u.end())) / 
                     max(1e-10f, abs(*max_element(gu.begin(), gu.end() )) ) );
-        }
         for (int i = 0; i < u.size(); ++i ) { u[i] -= scale*gu[i]; }  
     }   
 }
@@ -265,6 +253,7 @@ vector<float> tvdeblur::result() {
     return interleave_channels(I, chan); 
 }
 
+vector<float> tvdeblur::get_kernel() { return kernel; }
 
 // applies a gradient step to the grayscale image
 // u      - optimization variable (rows_padded, cols_padded)
@@ -282,10 +271,10 @@ vector<float> tvdeblur::calc_grad_img(const vector<float>& u, const vector<float
 
     // calculate TV gradient:
     int n = rows_padded*cols_padded;
+    vector<float> Du(2*n);
+    vector<float> Dtu(n);
     for (int ch = 0; ch < chan; ++ch) {
-        vector<float> u_( u.begin() + n*ch, u.begin()+n*(ch+1) );
-        vector<float> Du, Dtu;
-        apply_pixelwise_gradient_op(Du, u_, rows_padded, cols_padded);
+        apply_pixelwise_gradient_op(&Du[0], &u[0]+n*ch, rows_padded, cols_padded);
         for (int i = 0; i < n; ++i) {
             float den = sqrt( Du[i]*Du[i] + Du[i+n]*Du[i+n] ) + params->eps;
             Du[i]   /= den;
@@ -311,10 +300,9 @@ float tvdeblur::calc_func_value(const vector<float>& u,
 
     int n = rows_padded*cols_padded;
     float fxtv = 0.0f;
+    vector<float> Du(2*n);
     for (int ch = 0; ch < chan; ++ch) {
-        vector<float> Du;
-        vector<float> u_(u.begin()+n*ch, u.begin()+n*(ch+1) );
-        apply_pixelwise_gradient_op(Du, u_, rows_padded, cols_padded);        
+        apply_pixelwise_gradient_op(&Du[0], &u[0]+n*ch, rows_padded, cols_padded);        
         for (int i = 0; i < n; ++i) { 
             float absval = sqrt( Du[i]*Du[i] + Du[i+n]*Du[i+n] );
             fxtv += lambda*absval;
@@ -346,47 +334,6 @@ vector<float> tvdeblur::calc_grad_kernel(const vector<float>& u,
     return gk;
 }
 
-float tvdeblur::bls_u(const vector<float>& gu, float lambda, float bls_step) {
-    float fx0 = calc_func_value(u, kernel, img_og, lambda);
-    float gn2 = 0.0f; for (auto x : gu) { gn2 += x*x; }
-
-    bls_step = max(1e-5f, bls_step/params->bls_beta);
-    for (int bls_iter=0; bls_iter < params->bls_max_iters; ++bls_iter) {
-        vector<float> u_ = u;
-        for (int i = 0; i < u_.size(); ++i) { u_[i] -= bls_step*gu[i]; }
-        float fx = calc_func_value(u_, kernel, img_og, lambda);
-        if (fx > fx0 - params->bls_alpha*bls_step*gn2) {
-            bls_step *= params->bls_beta;
-        } else {
-            // printf("bls u converged in %d: %f <= %f (%f)\n", 
-            //     bls_iter, fx, fx0-params->bls_alpha*bls_step*gn2, bls_step);
-            break;
-        }
-    }
-    return bls_step;
-}
-
-float tvdeblur::bls_k(const vector<float>& gk, float lambda, float bls_step) {
-    float fx0 = calc_func_value(u, kernel, img_og, lambda);
-    float gn2 = 0.0f; for (auto x : gk) { gn2 += x*x; }
-
-    bls_step = max(1e-5f, bls_step/params->bls_beta);
-    for (int bls_iter=0; bls_iter < params->bls_max_iters; ++bls_iter) {
-        vector<float> k_ = kernel;
-        for (int i = 0; i < k_.size(); ++i) { k_[i] -= bls_step*gk[i]; }
-        project_kernel_onto_feasible_set(k_);
-
-        float fx = calc_func_value(u, k_, img_og, lambda);
-        if (fx > fx0 - params->bls_alpha*bls_step*gn2) {
-            bls_step *= params->bls_beta;
-        } else {
-            // printf("bls k converged in %d: %f <= %f (%f)\n", 
-            //     bls_iter, fx, fx0-params->bls_alpha*bls_step*gn2, bls_step);
-            break;
-        }
-    }
-    return bls_step;
-}
 
 //! im1, rows1, cols1, chan1 -- first image
 //! im2, rows2, cols2, chan2 -- second image
@@ -423,7 +370,8 @@ vector<float> tvdeblur::fft_imfilter(
     //                          take FFT of the kernel 2.
     // -------------------------------------------------------------------------
     if (chan2 == 1) {
-        p0 = fftwf_plan_dft_r2c_2d(rows_padded, cols_padded, ker_p1, ker_p2, FFTW_MEASURE);
+        p0 = fftwf_plan_dft_r2c_2d(rows_padded, cols_padded, 
+                                                ker_p1, ker_p2, FFTW_MEASURE);
 
         memset(ker_p1, 0, sizeof(float)*rows_padded*cols_padded);
         for (int r = 0; r < rows2; ++r) {
@@ -516,25 +464,6 @@ vector<float> tvdeblur::time_reverse_signal(const vector<float>& in, int rows, i
             int c = getcol(i, cols);
             out[ linear_index(rows-1-r, cols-1-c, cols) + ch*n] = in[i+ch*n];
         }
-    }
-    return out;
-}
-
-vector<float> tvdeblur::stack_channels(const vector<float>& in, int chan) {
-    if (chan == 1) { return in; }
-    int n = in.size()/chan;
-    vector<float> out = vector<float>(in.size());
-    for (int ch = 0; ch < chan; ++ch) {
-        for (int i = 0; i < n; ++i) { out[i+n*ch] = in[chan*i + ch]; }
-    }
-    return out;
-}
-vector<float> tvdeblur::interleave_channels(const vector<float>& in, int chan) {
-    if (chan == 1) { return in; }
-    int n = in.size()/chan;
-    vector<float> out = vector<float>(in.size());
-    for (int ch = 0; ch < chan; ++ch) {
-        for (int i = 0; i < n; ++i) { out[chan*i + ch] = in[i+n*ch]; }
     }
     return out;
 }

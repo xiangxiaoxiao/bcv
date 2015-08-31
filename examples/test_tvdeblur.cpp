@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include "tvdeblur.h"
+#include "tvdeblur_nonblind.h"
 #include "bcv_io.h"
 #include <algorithm>
 
@@ -15,7 +16,7 @@ DEFINE_int32(kernel_size, 15, "kernel size");
 DEFINE_int32(verbosity, 100, "verbosity");
 DEFINE_int32(max_inner_iterations, 1, "max inner iterations");
 DEFINE_int32(max_nonblind_iterations, 100, "max nonblind iterations");
-DEFINE_int32(max_anneal_rounds, 10000, "max anneal iterations");
+DEFINE_int32(max_anneal_rounds, 1, "max anneal iterations");
 // pyramid parameters
 DEFINE_double(annealing_rate, 0.999, "annealing rate");
 DEFINE_int32(pyramid_num_levels, 1, "num pyramid levels");
@@ -45,7 +46,7 @@ int main(int argc, char** argv) {
     params.annealing_rate = FLAGS_annealing_rate;
     params.max_inner_iterations = FLAGS_max_inner_iterations;
     params.max_nonblind_iterations = FLAGS_max_nonblind_iterations;
-    params.max_anneal_rounds = FLAGS_max_anneal_rounds;    
+    params.max_anneal_rounds = FLAGS_max_anneal_rounds;
     params.grad_descent_step_u = FLAGS_grad_descent_step_u;
     params.grad_descent_step_k = FLAGS_grad_descent_step_k;
     params.eps = 1e-5f;
@@ -62,15 +63,34 @@ int main(int argc, char** argv) {
     // ------------------------------------------------------------------------
     t1 = bcv::now_ms();
     bcv::tvdeblur tvdb(img, params);
-    
     tvdb.solve();
     vector<float> out = tvdb.result();
+    vector<float> ker = tvdb.get_kernel();
     t2 = bcv::now_ms();
 
-    transform(out.begin(), out.end(), out.begin(), 
-                    bind1st( multiplies<float>(), 256.0f ) );
-    bcv::bcv_imwrite(FLAGS_output.c_str(), out, rows, cols, chan);
-    printf("Wrote the result to '%s'\n", FLAGS_output.c_str() );
+    /*
+    //transform(out.begin(), out.end(), out.begin(), 
+    //          bind1st( multiplies<float>(), 256.0f ) );
+    //bcv::bcv_imwrite(FLAGS_output.c_str(), out, rows, cols, chan);
+    //printf("Wrote the result to '%s'\n", FLAGS_output.c_str() );
     printf("took %.3f s\n", (t2-t1)/1000.0f );
+    
+    //vector<float> out; 
+    // we can now try the nonblind deconvolution..
+    bcv::tvdeblur_nonblind_params params_nonblind;
+    params_nonblind.rows = rows;
+    params_nonblind.cols = cols;
+    params_nonblind.chan = chan;
+    params_nonblind.lambda = 1e-2;
+    params_nonblind.kernel = vector<float>(params.ker_size*params.ker_size, 1.0f);
+    params_nonblind.rows_ker = params.ker_size;
+    params_nonblind.cols_ker = params.ker_size;
+
+    bcv::tvdeblur_nonblind tvdb_nonblind;
+    out = tvdb_nonblind.solve(img, params_nonblind);
+    //transform(out.begin(), out.end(), out.begin(), 
+    //                bind1st( multiplies<float>(), 256.0f ) );
+    //bcv::bcv_imwrite("out_nonblind.png", out, rows, cols, chan);
+    */
     return 0;
 }

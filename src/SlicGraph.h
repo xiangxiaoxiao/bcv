@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
-#include <cmath>
 #include <climits>
 #include <set>
 #include <algorithm>
@@ -14,9 +13,6 @@
 namespace bcv {
 using namespace std;
 
-typedef unsigned char uchar;
-typedef pair<int,int> intpair;
- 
 template <typename T>
 struct SlicNode {
     int x, y;
