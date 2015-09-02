@@ -10,7 +10,6 @@ int read_png_file(const char *file_name, unsigned char** img, int* width, int* h
     png_structp png_ptr;
     png_infop info_ptr;
     unsigned int sig_read = 0;
-    int bit_depth, color_type, interlace_type;
     png_bytepp row_pointers;
     FILE *fp;
 
@@ -71,11 +70,10 @@ int read_png_file(const char *file_name, unsigned char** img, int* width, int* h
 
     *width = (int)png_get_image_width(png_ptr, info_ptr);
     *height = (int)png_get_image_height(png_ptr, info_ptr);
-    // TODO(vasiliy): not quite clear what color_type is and whther it is anlogoues to channels.
     *channels = (int)png_get_channels(png_ptr, info_ptr);
-    color_type = png_get_color_type(png_ptr, info_ptr);
-    bit_depth = png_get_bit_depth(png_ptr, info_ptr);
-    // TODO(vasiliy): ENSURE WE UNDERSTAND WHAT HAPPENS IF DATA IS NOT CHARS...
+    // TODO(vasiliy)- we never use these
+    //int color_type = png_get_color_type(png_ptr, info_ptr);
+    //int bit_depth = png_get_bit_depth(png_ptr, info_ptr);
 
     int w = *width;
     int h = *height;
@@ -111,7 +109,6 @@ int write_png_file(const char *file_name, unsigned char* img, int width, int hei
     png_bytepp row_pointers;
     png_structp png_ptr;
     png_infop info_ptr;
-    png_colorp palette;
 
     /* open the file */
     fp = fopen(file_name, "wb");

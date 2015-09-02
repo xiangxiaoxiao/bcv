@@ -27,6 +27,9 @@ DEFINE_bool(run_on_training_set, false, "sanity check");
 DEFINE_bool(gamma_normalization, false, "normalize gamma?");
 
 void compute_descriptors(const vector<string>& files);
+void compute_descriptors(const vector<string>& files, 
+                         const string& flag, const string& out_filelist_name);
+
 void create_svm_problem(problem& svm_problem, int nexamples, int dim);
 void destroy_svm_problem(problem& svm_problem);
 void hog_to_feature_node(const vector<float>& data, feature_node* out);
@@ -62,8 +65,14 @@ int main(int argc, char** argv) {
         neg_files = read_file_lines( fname_neg.c_str() );
         for (auto& f : pos_files) { f = img_path + f; }
         for (auto& f : neg_files) { f = img_path + f; }
-        compute_descriptors(pos_files);
-        compute_descriptors(neg_files);
+
+        compute_descriptors(pos_files, string("pos"), string("pos_hog_descriptors") );
+        compute_descriptors(neg_files, string("neg"), string("neg_hog_descriptors") );
+
+        //compute_descriptors(pos_files);
+        //compute_descriptors(neg_files);
+        pos_files = read_file_lines( "pos_hog_descriptors" );
+        neg_files = read_file_lines( "neg_hog_descriptors" );
         train_svm_model(pos_files, neg_files);
     }
     fname_pos = string( base_path + "Test/pos.lst");
@@ -106,7 +115,7 @@ void test_svm_model(const vector<string>& files, double svm_threshold) {
             det.print(); 
             draw_bbox(img, colour, det, rows, cols);
         }
-        sprintf(out_fname, "out_%03d.png", i);
+        sprintf(out_fname, "out_%03zu.png", i);
         bcv_imwrite(out_fname, img, rows, cols, chan);
     }
 }
@@ -161,7 +170,6 @@ vector<bbox_scored> detect_in_image(const model* svm_model, double svm_threshold
     vector<feature_node> svm_data;
     vector<double> prob_estimates(2);
     vector<bbox_scored> boxes;
-    int index = 0;
 
     vector<float> img_gradnorm;
     vector<float> img_gradtheta;
@@ -172,7 +180,7 @@ vector<bbox_scored> detect_in_image(const model* svm_model, double svm_threshold
             // extract subimage
             bbox bb(c, c+IMG_COLS, r, r+IMG_ROWS);
                         
-            double t1 = now_ms();
+            //double t1 = now_ms();
             vector<float> subimg_gradnorm = extract_subimage(img_gradnorm, rows, cols, bb);
             vector<float> subimg_gradtheta = extract_subimage(img_gradtheta, rows, cols, bb);
             Hog descr(subimg_gradnorm, subimg_gradtheta, IMG_ROWS, IMG_COLS, FLAGS_cell_size, FLAGS_num_orientations);
@@ -222,7 +230,7 @@ void train_svm_model(const vector<string>& pos_files,
         for (size_t i = 0; i < files.size(); ++i, ++idx) { 
             string fname_hog(files[i]);
             set_extension(fname_hog, "hog");
-            printf("%d) y=%d, %s\n", i, labels[i], fname_hog.c_str() );
+            printf("%zu) y=%d, %s\n", i, labels[i], fname_hog.c_str() );
 
             if (!file_exists(fname_hog.c_str()) ) { 
                 printf("FILE DOES NOT EXIST.\n");
@@ -258,10 +266,10 @@ void train_svm_model(const vector<string>& pos_files,
         vector<float> svm_C_vec(10);
         vector<float> svm_C_acc(10);
         svm_C_vec[0] = 1e-5;
-        for (int i = 1; i < svm_C_vec.size(); ++i) {
+        for (size_t i = 1; i < svm_C_vec.size(); ++i) {
             svm_C_vec[i] = 5*svm_C_vec[i-1];
         }
-        for (int k = 0; k < svm_C_vec.size(); ++k) {
+        for (size_t k = 0; k < svm_C_vec.size(); ++k) {
             int num_cr_folds = 4;
             vector<int> pred_labels( nexamples, 0);
             svm_param.C = svm_C_vec[k];
@@ -326,9 +334,9 @@ void hog_to_feature_node(const vector<float>& data, feature_node* out) {
         out[j].value = data[j];
     }
     out[dim].index = dim+1; // bias
-    out[dim].value = 1; // bias
-    out[dim+1].index = -1; // end
-    out[dim+1].value = 0; // end
+    out[dim].value = 1;     // bias
+    out[dim+1].index = -1;  // end
+    out[dim+1].value = 0;   // end
 }
 
 void create_svm_problem(problem& svm_problem, int nexamples, int dim) {
@@ -352,7 +360,7 @@ void compute_descriptors(const vector<string>& files) {
     int rows, cols, chan;
     double t1, t2;
     for (size_t i = 0; i < files.size(); ++i) { 
-        printf("%d) %s\n", i, files[i].c_str() );
+        printf("%zu) %s\n", i, files[i].c_str() );
         string fname_hog(files[i]);
         set_extension(fname_hog, "hog");
 
@@ -375,5 +383,44 @@ void compute_descriptors(const vector<string>& files) {
         t2 = now_ms();
         descr.write( fname_hog.c_str() );
         printf("computed hog on %dx%d image, took %f ms\n", rows, cols, t2-t1);
+    }
+}
+
+// Go through the input files in 'files', open each, compute descriptors,
+// and save them in current directory with names 'flag_xxxxx.hog'.
+// The list of output files will also be written to 'out_filelist_name'.
+void compute_descriptors(const vector<string>& files, 
+                         const string& flag, const string& out_filelist_name) {
+    int rows, cols, chan;
+    double t1, t2;
+    int index = 0;
+    int num_windows = 10;
+    char fname_hog[256];
+
+    ofstream out_file(out_filelist_name, ios::out);
+    for (size_t i = 0; i < files.size(); ++i) { 
+        printf("%zu) %s\n", i, files[i].c_str() );        
+        // compute hog descriptor
+        vector<float> img = bcv_imread<float>(files[i].c_str(), &rows, &cols, &chan);
+        vector<float> I;
+        for (int num=0; num < num_windows; ++num) {
+            if ((IMG_ROWS==rows) || (IMG_COLS==cols)) { 
+                I = img;
+                num = num_windows; 
+            } else {
+                int x1 = rand() % (cols-IMG_COLS);
+                int y1 = rand() % (rows-IMG_ROWS);
+                bbox bb(x1, x1+IMG_COLS, y1, y1+IMG_ROWS);    
+                I = extract_subimage(img, rows, cols, bb);
+            }
+            t1 = now_ms();
+            Hog descr = Hog(I, IMG_ROWS, IMG_COLS, FLAGS_cell_size, FLAGS_num_orientations);
+            t2 = now_ms();
+            sprintf(fname_hog, "%s_%05d.hog", flag.c_str(), index);
+            descr.write( fname_hog );
+            out_file << fname_hog << "\n";
+            printf("computed hog on %dx%d image, took %f ms\n", IMG_ROWS, IMG_COLS, t2-t1);
+            index++;
+        }
     }
 }

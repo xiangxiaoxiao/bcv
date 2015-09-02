@@ -78,7 +78,6 @@ template <class T> vector<T> bcv_imread(const char* fname, int* rows, int* cols,
 
 //! Loads image from 'fname' and converts to grayscale if needed
 template <class T> vector<T> bcv_imread(const char* fname, int* rows, int* cols) { 
-    unsigned char* img=NULL;
     int channels;
     vector<T> x = bcv_imread<T>(fname, rows, cols, &channels);
     if (channels==1) { return x; }
@@ -104,11 +103,15 @@ inline int file_exists(const char* fname) {
 
 //! Changes the end of s into 'ext'
 inline void set_extension(string& s, const char* ext) { 
-    int n = strlen(ext);
+    size_t n = strlen(ext);
     if (s.size() < n) { return; }
-    for (int i=s.size()-n,j=0; i<s.size(); ++i, ++j) { s[i]=ext[j]; }
+    for (size_t i=s.size()-n,j=0; i<s.size(); ++i, ++j) { s[i]=ext[j]; }
 }
 
+//! given 'sup.blabla' returns 'sup'
+inline string strip_extension(const string& s) { 
+    return s.substr(0, s.find('.'));
+}
 
 //! Returns a vector of lines from file.
 vector<string> read_file_lines(const char* fname);

@@ -38,12 +38,12 @@ public:
     float dx_tolerance = 1e-6f; // |x-x_|/|x| < threshold --> quit
     int verbosity = 1;
 
-    int rows = 0;
-    int cols = 0;
-    int chan = 0;
+    size_t rows = 0;
+    size_t cols = 0;
+    size_t chan = 0;
 
-    int cols_ker = 0;
-    int rows_ker = 0;
+    size_t cols_ker = 0;
+    size_t rows_ker = 0;
     vector<float> kernel;
 };
 

@@ -21,7 +21,7 @@ void nms(vector<bbox_scored>& boxes, double threshold) {
         pick[i] = true;
         vector<bool> suppress( idx.size(), false);
         suppress[last]=true;
-        for (int pos = 0; pos < last; ++pos) {
+        for (size_t pos = 0; pos < last; ++pos) {
             int j = idx[pos];
             double o = double(boxes[i].overlap_area(boxes[j])) / double(boxes[j].area());
             if (o > threshold) { suppress[pos]=true; }

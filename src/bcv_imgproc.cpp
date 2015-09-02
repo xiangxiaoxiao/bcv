@@ -1,7 +1,7 @@
 #include "bcv_imgproc.h"
 namespace bcv {
 
-//! Returns gradient magnitude and gradient orientation given the image
+//! Returns gradient magnitude and gradient orientation given the image.
 void compute_gradient_norm_angle(
                 vector<float>& gradnorm_vec, vector<float>& theta_vec, 
                 const vector<float>& img, int rows, int cols) {
@@ -11,14 +11,48 @@ void compute_gradient_norm_angle(
     vector<float> img_dx = central_diff_mask(img, rows, cols, 0);
     vector<float> img_dy = central_diff_mask(img, rows, cols, 1);
     int chan = img.size()/rows/cols;
-    
+
+    float atan_lut_maxval = 10;
+    vector<float> atan_lut(256);
+    for (int i = 0; i < 256; ++i) {
+        atan_lut[i] = atan(i/float(atan_lut.size())*atan_lut_maxval);
+    }
+    #if defined(HAVE_SSE)
+    __m128 m_small_eps = _mm_set1_ps(1e-8f);
+    __m128 m_pi = _mm_set1_ps(M_PI);
+    __m128 m_pihalf = _mm_set1_ps(M_PI/2.0);
+    __m128 m_zero = _mm_set1_ps(0.0);
+    // speedup obtained via a lookup table for arctan...
+    for (int i = 0; i < rows*cols*chan; ++i) { 
+        float ratio = (1e-8f + img_dy[i])/(1e-8f + img_dx[i]);
+        int idx = min(1.0f, abs(ratio)/atan_lut_maxval)*(atan_lut.size()-1);
+        theta_vec[i] = BCV_SIGN(ratio)*atan_lut[idx];
+    }
+    int nloops = rows*cols*chan/4;
+    for (int i = 0; i < nloops; ++i) {
+        __m128 dy = _mm_add_ps(_mm_loadu_ps(&img_dy[0]+4*i), m_small_eps);
+        __m128 dx = _mm_add_ps(_mm_loadu_ps(&img_dx[0]+4*i), m_small_eps);
+        __m128 gnorm = _mm_sqrt_ps( _mm_add_ps(_mm_mul_ps(dx,dx), _mm_mul_ps(dy,dy) ) );
+        __m128 m_theta = _mm_loadu_ps(&theta_vec[0]+4*i);
+        m_theta = _mm_min_ps( m_pi, _mm_max_ps(m_zero, _mm_add_ps(m_pihalf, m_theta)));
+        _mm_storeu_ps( &theta_vec[0]+4*i, m_theta);        
+        _mm_storeu_ps( &gradnorm_vec[0]+4*i, gnorm);
+    }
+    for (int i = 4*nloops; i < rows*cols*chan; ++i) {
+        float dy = 1e-8f + img_dy[i];
+        float dx = 1e-8f + img_dx[i];
+        theta_vec[i] = min(M_PI, max(0.0, M_PI/2.0f + theta_vec[i] )); // in [0,pi]
+        gradnorm_vec[i] = sqrt(dx*dx + dy*dy);        
+    }
+    #else
     for (int i = 0; i < rows*cols*chan; ++i) {
         float dy = 1e-8f + img_dy[i];
         float dx = 1e-8f + img_dx[i];
         // TODO: atan2 for stability ??? 
         theta_vec[i] = min(M_PI, max(0.0, M_PI/2.0f + atan( dy/dx ) )); // in [0,pi]
         gradnorm_vec[i] = sqrt(dx*dx + dy*dy);
-    } 
+    }
+    #endif 
 }
 
 //! \brief Bilinearly resize the image
@@ -112,22 +146,22 @@ void circshift(vector<float>& in, int rows, int cols, int shift_x, int shift_y) 
 
 void rgb2hsv(vector<float>& x) {
     assert( (x.size() % 3) == 0 && "image has 3 channels." );
-    for (int i = 0; i < x.size(); i+=3) { rgb2hsv_one(&x[i]); }
+    for (size_t i = 0; i < x.size(); i+=3) { rgb2hsv_one(&x[i]); }
 }
 
 void hsv2rgb(vector<float>& x) {
     assert( (x.size() % 3) == 0 && "image has 3 channels." );
-    for (int i = 0; i < x.size(); i+=3) { hsv2rgb_one(&x[i]); }
+    for (size_t i = 0; i < x.size(); i+=3) { hsv2rgb_one(&x[i]); }
 }
 
 void rgb2yiq(vector<float>& x) {
     assert( (x.size() % 3) == 0 && "image has 3 channels." );
-    for (int i = 0; i < x.size(); i+=3) { rgb2yiq_one(&x[i]); }
+    for (size_t i = 0; i < x.size(); i+=3) { rgb2yiq_one(&x[i]); }
 }
 
 void yiq2rgb(vector<float>& x) {
     assert( (x.size() % 3) == 0 && "image has 3 channels." );
-    for (int i = 0; i < x.size(); i+=3) { yiq2rgb_one(&x[i]); }
+    for (size_t i = 0; i < x.size(); i+=3) { yiq2rgb_one(&x[i]); }
 }
 
 void sepia(vector<float>& x, float i_new, float q_new) {
@@ -138,7 +172,7 @@ void sepia(vector<float>& x, float i_new, float q_new) {
     s[0] = +0.956*i_new + 0.620*q_new;                                     
     s[1] = -0.272*i_new - 0.647*q_new;                                     
     s[2] = -1.108*i_new + 1.705*q_new;                                     
-    for (int j = 0; j < x.size(); j+=3) { 
+    for (size_t j = 0; j < x.size(); j+=3) { 
         x_ = &x[j];
         y = 0.299*x_[0] + 0.587*x_[1] + 0.114*x_[2];                                   
         x_[0] = 1.0*y + s[0];
@@ -152,12 +186,12 @@ void hist_eq(vector<uchar>& x, int chan) {
     vector<float> cdf = vector<float>(256);
     float inv_sum = 1.0f/(x.size()/chan);
     for (int c = 0; c < chan; ++c) { 
-        for (int i = c; i < x.size(); i+=chan) { pdf[ x[i] ]++; }
+        for (size_t i = c; i < x.size(); i+=chan) { pdf[ x[i] ]++; }
         transform(pdf.begin(), pdf.end(), pdf.begin(),
                        bind1st(multiplies<float>(), inv_sum));
         cdf[0] = pdf[0];
-        for (int i = 0; i < pdf.size();++i) { cdf[i] = cdf[i-1] + pdf[i]; }
-        for (int i = c; i < x.size(); i+=chan) { x[i] = 255*cdf[ x[i] ]; }
+        for (size_t i = 0; i < pdf.size();++i) { cdf[i] = cdf[i-1] + pdf[i]; }
+        for (size_t i = c; i < x.size(); i+=chan) { x[i] = 255*cdf[ x[i] ]; }
     }
 }
 
@@ -170,7 +204,7 @@ void vignette(vector<float>& x, int rows, int cols, int chan, float sigma) {
     float sigma_sq_vert = (sigma*sigma)/(rows*rows);
     for (int i = 0; i < cols; ++i) { wx[i] = exp(-sigma_sq_horiz*(i-cx)*(i-cx)); }
     for (int i = 0; i < rows; ++i) { wy[i] = exp(-sigma_sq_vert*(i-cy)*(i-cy)); }
-    for (int i = 0; i < x.size(); ++i) { 
+    for (size_t i = 0; i < x.size(); ++i) { 
         int r = getrow(i, cols, chan);
         int c = getcol(i, cols, chan);
         x[i] *= (wy[r]*wx[c]);
@@ -188,17 +222,17 @@ void gamma_adjustment(vector<float>& x, float gamma) {
        gamma = -log(mu)/0.693147f; //log(2.0f);
     }
     vector<float> lut = vector<float>(256);
-    for (int i = 0; i < lut.size(); ++i) { 
+    for (size_t i = 0; i < lut.size(); ++i) { 
         lut[i] = pow( ((i+1)/256.0f), 1.0f/gamma );
     }
-    for (int i = 0; i < x.size(); ++i) { x[i] = lut[ 255*x[i] ]; }
+    for (size_t i = 0; i < x.size(); ++i) { x[i] = lut[ 255*x[i] ]; }
     transform(x.begin(), x.end(), x.begin(), bind1st(multiplies<float>(), maxval));
 }
 
 void modulate(vector<float>& x, float val_mul, float sat_mul, float hue_rot) {
     assert( (x.size() % 3) == 0 && "image has 3 channels." );
     if ((val_mul==1) && (sat_mul==1) && (hue_rot==0)) { return; }
-    for (int i = 0; i < x.size(); i+=3) { 
+    for (size_t i = 0; i < x.size(); i+=3) { 
         x[i+2]*=val_mul;
         x[i+1]*=sat_mul;
         x[i+0]+=hue_rot;
@@ -213,7 +247,7 @@ void vintage(vector<float>& x, float maxval) {
     if (maxval==0) { return; }
     transform(x.begin(), x.end(), x.begin(), bind1st(multiplies<float>(), 1.0f/maxval));
     float r,g,b;
-    for (int i = 0; i < x.size(); i+=3) { 
+    for (size_t i = 0; i < x.size(); i+=3) { 
         r = x[i+0];
         g = x[i+1];
         b = x[i+2];
@@ -232,7 +266,7 @@ void tint(vector<float>&x, const vector<float>& rgb, float percent) {
     transform(x.begin(), x.end(), x.begin(), bind1st(multiplies<float>(), 1.0f/maxval));
     // create multiplication fn:
     vector<float> mulf = vector<float>(256);
-    for (int i = 0; i < mulf.size(); ++i) { 
+    for (size_t i = 0; i < mulf.size(); ++i) { 
         float x = float(i)/float(mulf.size());
         mulf[i]=percent*(1.0f-(4.0f*((x-0.5)*(x-0.5))));
     }
@@ -243,7 +277,7 @@ void tint(vector<float>&x, const vector<float>& rgb, float percent) {
         rgb_[1]/=255.0; 
         rgb_[2]/=255.0; 
     }
-    for (int i = 0; i < x.size(); i+=3) {
+    for (size_t i = 0; i < x.size(); i+=3) {
         for (int j = 0; j < 3; ++j) { 
             float val = mulf[ floor(x[i+j]*255.99) ];
             x[i+j] = val*rgb_[j]+(1-val)*x[i+j];

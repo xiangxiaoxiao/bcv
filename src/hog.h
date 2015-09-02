@@ -52,7 +52,7 @@ class Hog {
 
     private:
     void init(const vector<float>& img_gradnorm, const vector<float>& img_theta,
-                        int rows, int cols, int cell_size, int num_orientations);
+                        int rows, int cols, int cell_size, int num_orientations) noexcept;
     int out_block_sz = 16; // for visualization
     bool is_initialized();
 };

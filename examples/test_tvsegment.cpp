@@ -44,8 +44,8 @@ int main(int argc, char** argv) {
     params.chan = chan;
     // ------------------------------------------------------------------------
     // load image
-    int n = rows*cols;
-    for (size_t i = 0; i < img.size(); ++i) { img[i] /= 256.0; }
+    transform(img.begin(), img.end(), img.begin(),
+                bind1st( multiplies<float>(), 1.0f/256.0f ) );
 
     compute_unary_term(img, &params);
 
@@ -56,13 +56,12 @@ int main(int argc, char** argv) {
     t2 = bcv::now_ms();
     printf("TV segmentation took: %f ms\n", (t2-t1) );
    
-    int show_rounded = 1;
-    int show_boundary = 1; 
     vector<float> res = tvs.get_result();
     vector<float> out = segutils_vis_segmentation( tvs.get_result(), 
             rows, cols, chan, params.clusters, FLAGS_show_rounded, FLAGS_show_boundary );
 
-    for (size_t i = 0; i < out.size(); ++i) { out[i] *= 256; }
+    transform(out.begin(), out.end(), out.begin(),
+                bind1st( multiplies<float>(), 256.0f ) );
     bcv::bcv_imwrite<float>(FLAGS_output.c_str(), out, rows, cols, chan);
     printf("Wrote the result to '%s'\n", FLAGS_output.c_str() );
     return 0;

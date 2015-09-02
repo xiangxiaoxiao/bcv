@@ -55,7 +55,7 @@ TEST(non_max_suppression, comparison_with_dpm) {
     sort(boxes_gt.begin(), boxes_gt.end());
 
     ASSERT_EQ( boxes_gt.size(), boxes.size() );
-    for (int i = 0; i < boxes.size(); ++i) {
+    for (size_t i = 0; i < boxes.size(); ++i) {
         ASSERT_EQ( boxes_gt[i], boxes[i] );
     }
     //------------------------------------------------------------------------// 
@@ -82,7 +82,7 @@ TEST(non_max_suppression, comparison_with_dpm) {
     sort(boxes.begin(), boxes.end());
 
     ASSERT_EQ( boxes_gt.size(), boxes.size() );
-    for (int i = 0; i < boxes.size(); ++i) {
+    for (size_t i = 0; i < boxes.size(); ++i) {
         ASSERT_EQ( boxes_gt[i], boxes[i] );
     }    
     //------------------------------------------------------------------------// 

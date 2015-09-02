@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     double t1,t2;
     int rows, cols, chan;
     vector<float> img = bcv_imread<float>(FLAGS_input.c_str(), &rows, &cols, &chan);
-    
+
     t1 = now_ms();
     Hog descr(img, rows, cols, FLAGS_cell_size, FLAGS_num_orientations);
     t2 = now_ms();

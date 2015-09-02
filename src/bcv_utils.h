@@ -43,7 +43,7 @@ int inline getcol(int i, int cols, int chan) {
 }
 
 //
-vector<int> choose_random_subset(int k, int n);
+vector<int> choose_random_subset(size_t k, size_t n);
 
 template <typename T>
 void keep_indices_if(vector<T>& x, const vector<bool>& pred) {

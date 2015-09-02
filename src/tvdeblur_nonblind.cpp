@@ -18,7 +18,7 @@ vector<float> tvdeblur_nonblind::solve(const vector<float>& img,
 }
 
 vector<float> tvdeblur_nonblind::solve_inner(const vector<float>& init) {
-    int n = params->rows*params->cols;
+    size_t n = params->rows*params->cols;
     int nedges = n*2;
 
     vector<float> u; 
@@ -35,7 +35,7 @@ vector<float> tvdeblur_nonblind::solve_inner(const vector<float>& init) {
         // compute D u
         tic = now_ms();
         vector<float> Dubar(nedges*params->chan);
-        for (int ch = 0; ch < params->chan; ++ch) {
+        for (size_t ch = 0; ch < params->chan; ++ch) {
             apply_pixelwise_gradient_op(
                 &Dubar[0]+nedges*ch, &ubar[0]+n*ch, params->rows, params->cols);
         }
@@ -53,7 +53,7 @@ vector<float> tvdeblur_nonblind::solve_inner(const vector<float>& init) {
         }
         // compute D^T y
         vector<float> Dty(n*params->chan, 0);
-        for (int ch = 0; ch < params->chan; ++ch) {
+        for (size_t ch = 0; ch < params->chan; ++ch) {
             apply_pixelwise_gradient_op_transpose(
                     &Dty[0]+n*ch, &y[0]+nedges*ch, params->rows, params->cols);
         }
@@ -64,7 +64,7 @@ vector<float> tvdeblur_nonblind::solve_inner(const vector<float>& init) {
         apply_prox_gu(u);    
         float dxL2 = 0;
         float xL2 = 0;
-        for (int i = 0; i < u.size(); ++i) { 
+        for (size_t i = 0; i < u.size(); ++i) { 
             ubar[i] = 2*u[i]-uprev[i]; 
             dxL2 += (u[i]-uprev[i])*(u[i]-uprev[i]);
             xL2 += u[i]*u[i];
@@ -93,12 +93,12 @@ vector<float> tvdeblur_nonblind::solve_inner(const vector<float>& init) {
 
 void tvdeblur_nonblind::apply_prox_gu(vector<float>& u) {
     fftwf_complex Fx, Ffk; float invden;
-    int n = params->rows*params->cols;
-    int fft_dim = params->cols*params->rows; //(params->rows/2+1);
-    for (int ch = 0; ch < params->chan; ++ch) {
+    size_t n = params->rows*params->cols;
+    size_t fft_dim = params->cols*params->rows; //(params->rows/2+1);
+    for (size_t ch = 0; ch < params->chan; ++ch) {
         memcpy( precomputed.p, &u[0]+n*ch, sizeof(float)*n );
         fftwf_execute( precomputed.p_forward );
-        for (int i = 0; i < fft_dim; ++i) {
+        for (size_t i = 0; i < fft_dim; ++i) {
             Fx[0] = precomputed.Fp[i][0];
             Fx[1] = precomputed.Fp[i][1];
             Ffk[0] = precomputed.Ffk[ch][i][0];
@@ -122,7 +122,7 @@ void tvdeblur_nonblind::persistent_data_setup(const vector<float>& img_degraded,
     int fft_dim = params->cols*params->rows; //(params->rows/2+1);
     int n = params->rows*params->cols;
     //precomputed.Ffk = (fftwf_complex**)fftwf_malloc(sizeof(fftwf_complex*)*params->chan);
-    for (int k = 0; k < params->chan; ++k) {
+    for (size_t k = 0; k < params->chan; ++k) {
         precomputed.Ffk[k] = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*fft_dim );
     }
     precomputed.Fkk = (float*)fftwf_malloc( sizeof(float)*fft_dim );
@@ -138,7 +138,7 @@ void tvdeblur_nonblind::persistent_data_setup(const vector<float>& img_degraded,
     // kernel is circshifted here
     
     vector<float> kernel_image(n, 0);
-    for (int r = 0; r < params->rows_ker; ++r) {
+    for (size_t r = 0; r < params->rows_ker; ++r) {
         memcpy( &kernel_image[ linear_index(r,0,params->cols) ], 
                       &kernel[ linear_index(r,0,params->cols_ker) ], 
                             sizeof(float)*params->cols_ker );
@@ -159,8 +159,7 @@ void tvdeblur_nonblind::persistent_data_setup(const vector<float>& img_degraded,
     }
     
     // compute FFTs of the degraded image:
-    
-    for (int k = 0; k < params->chan; ++k) {
+    for (size_t k = 0; k < params->chan; ++k) {
         //memcpy(fft_src, &img_degraded[0]+n*k, sizeof(float)*n);
         //fftwf_execute(p0);
         for (int i = 0; i < fft_dim; ++i) {
@@ -187,7 +186,7 @@ void tvdeblur_nonblind::persistent_data_setup(const vector<float>& img_degraded,
 
 void tvdeblur_nonblind::persistent_data_free() { 
     if (precomputed.Ffk) {
-        for (int k = 0; k < params->chan; ++k) {
+        for (size_t k = 0; k < params->chan; ++k) {
             if (precomputed.Ffk[k]) {
                 fftwf_free(precomputed.Ffk[k]); precomputed.Ffk[k] = NULL;
             }

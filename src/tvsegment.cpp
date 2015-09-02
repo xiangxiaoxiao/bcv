@@ -73,7 +73,7 @@ vector<float> tvsegment::get_result() { return u; }
 vector<int> tvsegment::get_assignments() {
     vector<int> seg = vector<int>(rows*cols, -1);
     int idx;
-    for (int i = 0; i < seg.size(); ++i) { 
+    for (size_t i = 0; i < seg.size(); ++i) { 
         //
         float maxval = -1.0f;
         for (int k = 0; k < K; ++k) { 
@@ -142,7 +142,7 @@ void tvsegment::project_onto_prob_simplex(vector<float>& x) {
             }
             mu = (a-1)/b;
         }
-        for (size_t k = 0; k < K; ++k) { 
+        for (int k = 0; k < K; ++k) { 
             p[k] = max(p[k] - mu, 0.0f);
         }
     }

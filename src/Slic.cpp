@@ -858,7 +858,7 @@ void Slic::get_superpixel_pixcount(int level) {
     pixcount = vector<int>(K, 0);
 
     vector<int> *assignments = &assignments_pyramid[level];
-    for (size_t i = 0; i < n; ++i) { 
+    for (int i = 0; i < n; ++i) { 
         pixcount[ (*assignments)[i] ]++;
     }
 }

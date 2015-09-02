@@ -159,7 +159,9 @@ bool video_writer::add_frame_internal(const uint8_t* data) {
     }
 
     // now allocate an image frame for the image in the output codec's format...
-    AVFrame* output = avcodec_alloc_frame();
+    //AVFrame* output = avcodec_alloc_frame(); TODO: THIS IS DEPRECATED. DOES BELOW WORK?
+    AVFrame* output = av_frame_alloc();
+
     output->format = PIX_FMT_RGB24; //AV_PIX_FMT_YUV420P;
     output->width = width;
     output->height = height;
@@ -184,6 +186,7 @@ bool video_writer::add_frame_internal(const uint8_t* data) {
     } else {
         uint8_t* outbuf = (uint8_t*)av_malloc(picSize);
         ret = avcodec_encode_video(codec_context, outbuf, picSize, output);
+        // TODO: above is deprecated. avcodec_encode_video2 uses a very different definition
         if (ret > 0) {
             AVPacket pkt;
             av_init_packet(&pkt);
@@ -200,7 +203,7 @@ bool video_writer::add_frame_internal(const uint8_t* data) {
         } else {
             char szError[1024];
             av_strerror(ret, szError, 1024);
-            printf(szError);
+            printf("%s", szError);
         }
         av_free(outbuf);
     }

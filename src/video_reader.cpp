@@ -28,7 +28,7 @@ bool video_reader::prepare() {
     }
     av_dump_format(pFormatCtx, 0, filename.c_str(), 0);
     // Find the first video stream
-    for(int i=0; i<pFormatCtx->nb_streams; i++) {
+    for(unsigned int i=0; i<pFormatCtx->nb_streams; i++) {
         if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO) {
             video_stream=i;
             break;
@@ -126,7 +126,7 @@ float video_reader::get_fps() const {
     if (video_stream < 0) { return 0.0f; }
     if (pFormatCtx) {
         return av_q2d(pFormatCtx->streams[video_stream]->r_frame_rate);
-    }
+    } else { return 0.0f; }
 }
 
 void video_reader::close() { 

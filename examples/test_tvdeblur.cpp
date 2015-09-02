@@ -67,13 +67,14 @@ int main(int argc, char** argv) {
     vector<float> out = tvdb.result();
     vector<float> ker = tvdb.get_kernel();
     t2 = bcv::now_ms();
-
+    printf("took %.3f s\n", (t2-t1)/1000.0f );
+    // TODO: THERE ARE STRANGE SEGFAULTS HERE
     /*
     //transform(out.begin(), out.end(), out.begin(), 
     //          bind1st( multiplies<float>(), 256.0f ) );
     //bcv::bcv_imwrite(FLAGS_output.c_str(), out, rows, cols, chan);
     //printf("Wrote the result to '%s'\n", FLAGS_output.c_str() );
-    printf("took %.3f s\n", (t2-t1)/1000.0f );
+
     
     //vector<float> out; 
     // we can now try the nonblind deconvolution..

@@ -56,7 +56,7 @@ vector<float> Hog::vis() {
             }
         }
     }
-    for (int i = 0; i < img.size(); ++i) { img[i]/=counts[i]; }
+    for (size_t i = 0; i < img.size(); ++i) { img[i]/=counts[i]; }
     return img;
 }
 
@@ -69,7 +69,7 @@ Hog::Hog(const vector<float>& img, int rows, int cols, int cell_size, int num_or
 }
 
 void Hog::init(const vector<float>& gradnorm_vec, const vector<float>& theta_vec_,
-                        int rows, int cols, int cell_size, int num_orientations) {
+                        int rows, int cols, int cell_size, int num_orientations) noexcept {
     int chan = gradnorm_vec.size() / (rows*cols);
     int cell_rows = ceil(rows/cell_size);
     int cell_cols = ceil(cols/cell_size);
@@ -82,7 +82,7 @@ void Hog::init(const vector<float>& gradnorm_vec, const vector<float>& theta_vec
     memset(descr_blocks, 0, sizeof(float)*block_rows*block_cols);
 
     int id0, id1, id2;
-    double theta, theta_id, gradnorm, w;
+    double theta_id, gradnorm, w;
 
     // multiply gradient orientations to be in range [0, num_orientations]
     float theta_scale = num_orientations / M_PI;
@@ -193,14 +193,10 @@ void Hog::init(const vector<float>& gradnorm_vec, const vector<float>& theta_vec
     rcs[2] = intpair(1,0);
     rcs[3] = intpair(1,1);
 
-    // compute normalizing factor in-place
-    for (int i = 0; i < block_rows*block_cols; ++i) {
-        descr_blocks[i] = 1.0f/sqrt(descr_blocks[i]+1e-8f);
-    }
     for (int br = 0; br < block_rows; ++br) {
         for (int bc = 0; bc < block_cols; ++bc) { 
-            float Zinv = descr_blocks[ linear_index(br, bc, block_cols) ];
-            for (int q = 0; q < rcs.size(); ++q) {
+            float Zinv = 1.0/sqrt( descr_blocks[ linear_index(br, bc, block_cols) ]+1e-8f);
+            for (int q = 0; q < 4; ++q) {
                 for (int o = 0; o < num_orientations; ++o) {
                     // id0 : index into output, id1: index into cells
                     id0 = linear_index(2*br+rcs[q].first, 

@@ -8,7 +8,7 @@ void tvdn_params::print() {
     if (accelerated) {
         printf("accelerated: 1 (gamma=%f)\n", gamma);
     } else { printf("accelerated: 0\n"); }
-    printf("max-iterations: %f\n", max_iterations);
+    printf("max-iterations: %d\n", max_iterations);
     printf("dx-tolerance: %f\n", dx_tolerance);
     printf("verbosity: %d\n", verbosity);
     printf("image size: %dx%dx%d\n", rows, cols, chan);
@@ -21,7 +21,6 @@ vector<float> tvdn::result() { return x; }
 
 tvdn::tvdn(const vector<float>& img, const tvdn_params& p) {
     int n = img.size();
-    int num_pts = n / p.chan;
     x       = vector<float>(n, 0.0f);
     x_bar   = vector<float>(n, 0.0f);
     DTy		= vector<float>(n, 0.0f);
@@ -31,16 +30,13 @@ tvdn::tvdn(const vector<float>& img, const tvdn_params& p) {
     float sigma_x = p.sigma_x;
     float sigma_y = p.sigma_y;
     float theta = 1.0f;
-    float inv_lambda = 1.0f/p.lambda;
     vector<float> dxvec = vector<float>(5, 1.0f);
-    float one_plus_sigmax_inv = 1.0f/(1.0f + sigma_x);      
-    for (size_t iter = 0; iter < p.max_iterations; ++iter) {
+    for (int iter = 0; iter < p.max_iterations; ++iter) {
 
         if (p.accelerated) {
             theta = 1.0f/sqrt(1.0f + 2*p.gamma*sigma_x);
             sigma_x = theta*sigma_x;
             sigma_y = sigma_y/theta;
-            one_plus_sigmax_inv = 1.0f/(1.0f + sigma_x);
         }
 
         apply_pixelwise_gradient_op_transpose(DTy, y, p.rows, p.cols, p.chan);
@@ -92,6 +88,7 @@ void tvdn::solve_y(float sigma_y, float lambda, int chan, int isotropic) {
     solve_y_sse(sigma_y, lambda, chan, isotropic);
     return;
     #endif
+
     int n = x.size();
     if (isotropic == 0) {
         for (int i = 0; i < 2*n; ++i) { 
@@ -125,7 +122,6 @@ float tvdn::solve_x_sse(const vector<float>& img, float theta, float sigma_x) {
     __m128 m_sigma = _mm_set1_ps( sigma_x );
     __m128 m_theta = _mm_set1_ps( theta );
     __m128 m_dx = _mm_set1_ps( 0.0f );
-    __m128 m_zero = _mm_set1_ps( 0.0f );
 
     float dx = 0;
     for (int i = 0; i < nloops; ++i) {
@@ -144,7 +140,6 @@ float tvdn::solve_x_sse(const vector<float>& img, float theta, float sigma_x) {
         _mm_storeu_ps( px+4*i, m_x);
         _mm_storeu_ps( px_bar+4*i, m_xbar );
     }
-    // need to verify:
     float dxsum_[4];
     _mm_storeu_ps(dxsum_, m_dx);
     dx = (dxsum_[0] + dxsum_[1] + dxsum_[2] + dxsum_[3]);
@@ -226,6 +221,6 @@ void tvdn::solve_y_sse(float sigma_y, float lambda, int chan, int isotropic) {
         }
     }
 }
+#endif // HAVE_SSE
 
 } // namespace bcv
-#endif

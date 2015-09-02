@@ -164,17 +164,11 @@ bcv_kmeans::bcv_kmeans(const char* fname) {
         printf("error reading %s.\n", fname);
         bcv_kmeans();
     }
-    int m;   
-    m = fread(&num_pts, sizeof(int), 1, fid);
-    assert(m == 1);
-    m = fread(&dim, sizeof(int), 1, fid);
-    assert(m == 1);
-    m = fread(&K, sizeof(int), 1, fid);
-    assert(m == 1);
-    m = fread(&num_iterations, sizeof(int), 1, fid);
-    assert(m == 1);
-    m = fread(&verbosity, sizeof(int), 1, fid);
-    assert(m == 1);
+    if(1 != fread(&num_pts, sizeof(int), 1, fid)) { printf("error.\n"); };
+    if(1 != fread(&dim, sizeof(int), 1, fid)) { printf("error.\n"); };
+    if(1 != fread(&K, sizeof(int), 1, fid)) { printf("error.\n"); };
+    if(1 != fread(&num_iterations, sizeof(int), 1, fid)) { printf("error.\n"); };
+    if(1 != fread(&verbosity, sizeof(int), 1, fid)) { printf("error.\n"); };
     dfx_tolerance = 1e-5;
  
     if (!check_parameters()) { 
@@ -189,8 +183,7 @@ bcv_kmeans::bcv_kmeans(const char* fname) {
     centers = new float[K*dim];
     count = new int[K];
         
-    m = fread(centers, sizeof(float), K*dim, fid);
-    assert(m==K*dim);
+    if (K*dim != (int)fread(centers, sizeof(float), K*dim, fid)) { printf("error.\n"); };
     fclose(fid);
 }
 

@@ -48,7 +48,6 @@ void write_jpeg_file(const char * filename, unsigned char* img, int width, int h
     jpeg_destroy_compress(&cinfo);
 }
 
-
 int read_jpeg_file (const char * filename, unsigned char** img, int* width, int* height,
                     int* channels) {
     struct jpeg_decompress_struct cinfo;
@@ -64,7 +63,14 @@ int read_jpeg_file (const char * filename, unsigned char** img, int* width, int*
     }
 
     cinfo.err = jpeg_std_error(&jerr.pub);
-    jerr.pub.error_exit = my_error_exit;
+    //jerr.pub.error_exit = my_error_exit;
+    jerr.pub.error_exit = [](j_common_ptr cinfo) {
+        my_error_mgr* myerr = (my_error_mgr*) cinfo->err;
+        (*cinfo->err->output_message)(cinfo);
+        longjmp(myerr->setjmp_buffer, 1);
+    };
+
+   
     if (setjmp(jerr.setjmp_buffer)) {
         jpeg_destroy_decompress(&cinfo);
         fclose(infile);

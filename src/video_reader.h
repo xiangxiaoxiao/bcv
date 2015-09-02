@@ -63,7 +63,7 @@ public:
         }
         dealloc_frame_internal();
         return out; 
-    };
+    }
 
     //! Returns image width
     int get_width() const { return width; };
